@@ -7,12 +7,33 @@
     Crawl trending topics · AI rewriting · Multi-platform styling · Rich-text copy with images
   </p>
   <p align="center">
-    <a href="#quick-start">Quick Start</a> •
+    <a href="#desktop-app">Download App</a> •
     <a href="#features">Features</a> •
-    <a href="#desktop-app">Desktop App</a> •
+    <a href="#usage-guide">Usage</a> •
+    <a href="#development">Development</a> •
     <a href="#architecture">Architecture</a>
   </p>
 </p>
+
+---
+
+## 💻 Desktop App
+
+**No Node.js required** — download, install, and start creating content in seconds.
+
+### Download & Install
+
+Download the installer from the [Releases](https://github.com/QIYUEKURONG/topic-advisor/releases) page:
+
+| Platform | File | Architecture |
+|----------|------|-------------|
+| macOS (Apple Silicon) | `Topic Advisor-x.x.x-arm64.dmg` | M1/M2/M3/M4 |
+| macOS (Intel) | `Topic Advisor-x.x.x.dmg` | x86_64 |
+| Windows | `Topic Advisor Setup x.x.x.exe` | x64 |
+
+> **macOS**: Double-click the `.dmg` → Drag to Applications → Open from Launchpad
+>
+> **Windows**: Double-click the `.exe` installer → Follow the setup wizard
 
 ---
 
@@ -70,7 +91,42 @@ Copy preserves formatting and images — paste directly into any editor.
 
 ---
 
-## 🚀 Quick Start
+## 📖 Usage Guide
+
+### Step 1 — Configure AI
+
+Go to **⚙️ Settings** and select your AI provider with API key.
+
+| Provider | URL | Best For |
+|----------|-----|----------|
+| DeepSeek | platform.deepseek.com | Best value, excellent Chinese |
+| OpenAI | platform.openai.com | GPT-4o, strong all-around |
+| Claude | console.anthropic.com | High quality long-form writing |
+| Moonshot | platform.moonshot.cn | Fast access from China |
+| Qwen | dashscope.console.aliyun.com | Alibaba Cloud ecosystem |
+
+### Step 2 — Crawl Content
+
+1. Set the number of articles to crawl
+2. Optionally select a topic category
+3. Click **Start Crawl**
+4. Watch real-time progress via SSE
+
+### Step 3 — AI Rewrite
+
+1. Click the **🤖 AI Rewrite** button on any article
+2. Choose a target platform style
+3. Preview the rewritten content (rendered Markdown)
+4. Click **Copy All + Images** for one-click clipboard
+
+### Step 4 — Publish
+
+- **WeChat / Xiaohongshu**: Paste into their respective editors
+- **Toutiao**: Use built-in login to sync directly to draft box
+
+---
+
+## 🛠️ Development
 
 ### Prerequisites
 
@@ -107,23 +163,7 @@ pnpm build    # Build frontend & backend
 pnpm start    # Start server (visit http://127.0.0.1:3721)
 ```
 
----
-
-## 💻 Desktop App
-
-**No Node.js required** — the desktop app is fully self-contained with an embedded runtime.
-
-### Download & Install
-
-Download the installer from the [Releases](https://github.com/QIYUEKURONG/topic-advisor/releases) page:
-
-| Platform | File | Architecture |
-|----------|------|-------------|
-| macOS (Apple Silicon) | `Topic Advisor-x.x.x-arm64.dmg` | M1/M2/M3/M4 |
-| macOS (Intel) | `Topic Advisor-x.x.x.dmg` | x86_64 |
-| Windows | `Topic Advisor Setup x.x.x.exe` | x64 |
-
-### Build from Source
+### Build Desktop App from Source
 
 ```bash
 # Mac (.dmg)
@@ -137,41 +177,6 @@ pnpm dist:all
 ```
 
 > Output goes to the `release/` directory
-
----
-
-## 📖 Usage Guide
-
-### Step 1 — Configure AI
-
-Go to **⚙️ Settings** and select your AI provider with API key.
-
-| Provider | URL | Best For |
-|----------|-----|----------|
-| DeepSeek | platform.deepseek.com | Best value, excellent Chinese |
-| OpenAI | platform.openai.com | GPT-4o, strong all-around |
-| Claude | console.anthropic.com | High quality long-form writing |
-| Moonshot | platform.moonshot.cn | Fast access from China |
-| Qwen | dashscope.console.aliyun.com | Alibaba Cloud ecosystem |
-
-### Step 2 — Crawl Content
-
-1. Set the number of articles to crawl
-2. Optionally select a topic category
-3. Click **Start Crawl**
-4. Watch real-time progress via SSE
-
-### Step 3 — AI Rewrite
-
-1. Click the **🤖 AI Rewrite** button on any article
-2. Choose a target platform style
-3. Preview the rewritten content (rendered Markdown)
-4. Click **Copy All + Images** for one-click clipboard
-
-### Step 4 — Publish
-
-- **WeChat / Xiaohongshu**: Paste into their respective editors
-- **Toutiao**: Use built-in login to sync directly to draft box
 
 ---
 
