@@ -111,7 +111,19 @@ pnpm start    # Start server (visit http://127.0.0.1:3721)
 
 ## 💻 Desktop App
 
-Package as a standalone Mac / Windows application:
+**No Node.js required** — the desktop app is fully self-contained with an embedded runtime.
+
+### Download & Install
+
+Download the installer from the [Releases](https://github.com/QIYUEKURONG/topic-advisor/releases) page:
+
+| Platform | File | Architecture |
+|----------|------|-------------|
+| macOS (Apple Silicon) | `Topic Advisor-x.x.x-arm64.dmg` | M1/M2/M3/M4 |
+| macOS (Intel) | `Topic Advisor-x.x.x.dmg` | x86_64 |
+| Windows | `Topic Advisor Setup x.x.x.exe` | x64 |
+
+### Build from Source
 
 ```bash
 # Mac (.dmg)
@@ -183,7 +195,7 @@ Go to **⚙️ Settings** and select your AI provider with API key.
 ### Project Structure
 
 ```
-toutiao-topic-advisor/
+topic-advisor/
 ├── server/                 # Backend service
 │   ├── src/
 │   │   ├── crawlers/       # News source adapters (15+)
@@ -205,6 +217,8 @@ toutiao-topic-advisor/
 │   └── package.json
 ├── electron/               # Desktop wrapper
 │   └── main.cjs
+├── scripts/                # Build scripts
+│   └── bundle-server.mjs   # esbuild server bundler
 ├── package.json            # Root config + build scripts
 └── README.md
 ```
@@ -230,7 +244,7 @@ toutiao-topic-advisor/
 | Frontend | React 19, Vite, Tailwind CSS, React Router, React Markdown |
 | Backend | Fastify, TypeScript, Cheerio, Undici, Puppeteer |
 | AI | DeepSeek / OpenAI / Claude / Moonshot / Qwen API |
-| Desktop | Electron, electron-builder |
+| Desktop | Electron, electron-builder, esbuild (single-file server bundle) |
 | Build | pnpm workspaces, TypeScript, Vite |
 
 ---
