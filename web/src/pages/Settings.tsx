@@ -1,0 +1,315 @@
+import { useState, useEffect } from 'react';
+import { api, type AppSettings, type AIProvider, type AIProviderConfig, AI_PROVIDER_OPTIONS } from '../lib/api';
+
+export default function Settings() {
+  const [settings, setSettings] = useState<AppSettings | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showKey, setShowKey] = useState(false);
+  const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'failed'>('idle');
+  const [testError, setTestError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.getSettings()
+      .then((s) => {
+        if (!s.aiProvider) {
+          s.aiProvider = {
+            provider: 'deepseek',
+            apiKey: s.deepseekApiKey || '',
+            baseUrl: s.deepseekBaseUrl || 'https://api.deepseek.com',
+            model: 'deepseek-chat',
+          };
+        }
+        setSettings(s);
+      })
+      .catch((e) => setError(e.message));
+  }, []);
+
+  const handleProviderChange = (provider: AIProvider) => {
+    if (!settings) return;
+    const option = AI_PROVIDER_OPTIONS.find((o) => o.id === provider)!;
+    setSettings({
+      ...settings,
+      aiProvider: {
+        provider,
+        apiKey: settings.aiProvider.apiKey,
+        baseUrl: option.baseUrl || settings.aiProvider.baseUrl,
+        model: option.model || settings.aiProvider.model,
+      },
+    });
+  };
+
+  const updateAIField = <K extends keyof AIProviderConfig>(key: K, value: AIProviderConfig[K]) => {
+    if (!settings) return;
+    setSettings({
+      ...settings,
+      aiProvider: { ...settings.aiProvider, [key]: value },
+    });
+  };
+
+  const handleSave = async () => {
+    if (!settings) return;
+    setSaving(true);
+    setError(null);
+    setSaved(false);
+    try {
+      const updated = await api.updateSettings({
+        aiProvider: settings.aiProvider,
+        rewritePrompt: settings.rewritePrompt,
+        enableRewrite: settings.enableRewrite,
+        dedupWindowHours: settings.dedupWindowHours,
+        enableScoreFilter: settings.enableScoreFilter,
+      });
+      setSettings(updated);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleTestConnection = async () => {
+    if (!settings?.aiProvider.apiKey) {
+      setTestError('请先填入 API Key');
+      return;
+    }
+    setTestStatus('testing');
+    setTestError(null);
+    try {
+      await api.updateSettings({ aiProvider: settings.aiProvider });
+      const res = await fetch('/api/tasks/test-rewrite', { method: 'POST' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(data.error || res.statusText);
+      }
+      setTestStatus('success');
+      setTimeout(() => setTestStatus('idle'), 5000);
+    } catch (e: any) {
+      setTestStatus('failed');
+      setTestError(e.message);
+    }
+  };
+
+  if (!settings) {
+    return (
+      <div className="p-8 text-center text-gray-400">
+        <div className="animate-pulse text-4xl mb-4">⏳</div>
+        加载设置中...
+      </div>
+    );
+  }
+
+  const selectedProvider = AI_PROVIDER_OPTIONS.find((o) => o.id === settings.aiProvider.provider);
+  const isCustom = settings.aiProvider.provider === 'custom';
+
+  return (
+    <div className="p-8 max-w-3xl mx-auto">
+      <h2 className="text-2xl font-bold mb-6">设置</h2>
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>
+      )}
+
+      {saved && (
+        <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm flex items-center gap-2">
+          <span>✓</span> 设置已保存
+        </div>
+      )}
+
+      {/* AI Provider Section */}
+      <section className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-2xl">🤖</span>
+          <div>
+            <h3 className="text-lg font-semibold">AI 改写配置</h3>
+            <p className="text-sm text-gray-500">选择 AI 模型供应商，配置 API Key 用于内容改写</p>
+          </div>
+        </div>
+
+        {/* Provider selector */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">模型供应商</label>
+          <div className="grid grid-cols-3 gap-2">
+            {AI_PROVIDER_OPTIONS.map((opt) => (
+              <button
+                key={opt.id}
+                onClick={() => handleProviderChange(opt.id)}
+                className={`px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all ${
+                  settings.aiProvider.provider === opt.id
+                    ? 'border-brand-500 bg-brand-50 text-brand-700 shadow-sm'
+                    : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* API Key */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            API Key
+            {settings.aiProvider.apiKey && (
+              <span className="ml-2 text-xs text-green-600 font-normal">✓ 已配置</span>
+            )}
+          </label>
+          <div className="relative">
+            <input
+              type={showKey ? 'text' : 'password'}
+              value={settings.aiProvider.apiKey}
+              onChange={(e) => updateAIField('apiKey', e.target.value)}
+              placeholder={`输入你的 ${selectedProvider?.label || ''} API Key`}
+              className="w-full px-4 py-2.5 pr-20 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent text-sm font-mono"
+            />
+            <button
+              onClick={() => setShowKey(!showKey)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-xs text-gray-500 hover:text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50"
+            >
+              {showKey ? '隐藏' : '显示'}
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 mt-1">
+            你的 API Key 仅存储在本地服务器，不会上传到任何第三方
+          </p>
+        </div>
+
+        {/* Base URL */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            API Base URL
+            {!isCustom && <span className="text-xs text-gray-400 ml-1">(已自动填充)</span>}
+          </label>
+          <input
+            type="text"
+            value={settings.aiProvider.baseUrl}
+            onChange={(e) => updateAIField('baseUrl', e.target.value)}
+            placeholder="https://api.example.com"
+            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent text-sm font-mono"
+          />
+          {!isCustom && (
+            <p className="text-xs text-gray-400 mt-1">
+              如需使用代理或自建服务，可修改此地址
+            </p>
+          )}
+        </div>
+
+        {/* Model name */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            模型名称
+            {!isCustom && <span className="text-xs text-gray-400 ml-1">(默认推荐)</span>}
+          </label>
+          <input
+            type="text"
+            value={settings.aiProvider.model}
+            onChange={(e) => updateAIField('model', e.target.value)}
+            placeholder="model-name"
+            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent text-sm font-mono"
+          />
+        </div>
+
+        {/* Test connection */}
+        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+          <button
+            onClick={handleTestConnection}
+            disabled={testStatus === 'testing' || !settings.aiProvider.apiKey}
+            className="px-4 py-2 text-sm font-medium bg-violet-500 text-white rounded-lg hover:bg-violet-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {testStatus === 'testing' ? (
+              <span className="flex items-center gap-2">
+                <span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                测试中...
+              </span>
+            ) : (
+              '测试连接'
+            )}
+          </button>
+          {testStatus === 'success' && (
+            <span className="text-sm text-green-600 font-medium">✓ 连接成功</span>
+          )}
+          {testStatus === 'failed' && (
+            <span className="text-sm text-red-600">✗ {testError || '连接失败'}</span>
+          )}
+          {!settings.aiProvider.apiKey && (
+            <span className="text-xs text-gray-400">请先填入 API Key</span>
+          )}
+        </div>
+      </section>
+
+      {/* Rewrite Prompt Section */}
+      <section className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-2xl">📝</span>
+          <div>
+            <h3 className="text-lg font-semibold">改写提示词</h3>
+            <p className="text-sm text-gray-500">自定义 AI 改写时的系统提示</p>
+          </div>
+        </div>
+
+        <textarea
+          value={settings.rewritePrompt}
+          onChange={(e) => setSettings({ ...settings, rewritePrompt: e.target.value })}
+          rows={5}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent text-sm resize-y"
+          placeholder="输入改写提示词..."
+        />
+      </section>
+
+      {/* Crawl settings */}
+      <section className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-2xl">⚙️</span>
+          <div>
+            <h3 className="text-lg font-semibold">爬取设置</h3>
+            <p className="text-sm text-gray-500">去重窗口、评分过滤等</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">去重窗口 (小时)</label>
+            <input
+              type="number"
+              min={1}
+              max={168}
+              value={settings.dedupWindowHours}
+              onChange={(e) => setSettings({ ...settings, dedupWindowHours: Number(e.target.value) || 24 })}
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm"
+            />
+            <p className="text-xs text-gray-400 mt-1">对比最近 N 小时内的历史内容做去重</p>
+          </div>
+
+          <div className="flex flex-col justify-center">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={settings.enableScoreFilter}
+                onChange={(e) => setSettings({ ...settings, enableScoreFilter: e.target.checked })}
+                className="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500"
+              />
+              <div>
+                <span className="text-sm font-medium text-gray-700">启用评分过滤</span>
+                <p className="text-xs text-gray-400">仅保留评分达标的内容</p>
+              </div>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      {/* Save button */}
+      <div className="flex justify-end">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="px-8 py-3 bg-brand-500 text-white font-semibold rounded-xl hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm shadow-sm"
+        >
+          {saving ? '保存中...' : '保存设置'}
+        </button>
+      </div>
+    </div>
+  );
+}

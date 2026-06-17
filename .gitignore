@@ -1,0 +1,12 @@
+node_modules/
+dist/
+release/
+*.dmg
+*.exe
+*.AppImage
+.DS_Store
+*.log
+server/data/
+output/
+.env
+.env.local

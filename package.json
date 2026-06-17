@@ -1,0 +1,73 @@
+{
+  "name": "toutiao-topic-advisor",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "AI 自媒体内容助手 — 一键抓取热点、AI 智能改写、多平台发布",
+  "author": "Topic Advisor Team",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "concurrently \"pnpm --filter server dev\" \"pnpm --filter web dev\"",
+    "build": "pnpm --filter web build && pnpm --filter server build",
+    "start": "pnpm --filter server start",
+    "electron:dev": "pnpm build && electron .",
+    "dist:mac": "pnpm build && electron-builder --mac",
+    "dist:win": "pnpm build && electron-builder --win",
+    "dist:all": "pnpm build && electron-builder --mac --win"
+  },
+  "build": {
+    "appId": "com.topic-advisor.app",
+    "productName": "热点话题助手",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "server/dist",
+        "to": "server/dist"
+      },
+      {
+        "from": "server/node_modules",
+        "to": "server/node_modules"
+      },
+      {
+        "from": "server/package.json",
+        "to": "server/package.json"
+      },
+      {
+        "from": "web/dist",
+        "to": "server/../web/dist"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["arm64", "x64"]
+        }
+      ]
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "electron": "^42.4.0",
+    "electron-builder": "^26.15.3",
+    "typescript": "^5.8.3"
+  }
+}

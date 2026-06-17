@@ -1,0 +1,7 @@
+packages:
+  - "server"
+  - "web"
+allowBuilds:
+  electron-winstaller: true
+  esbuild: true
+  puppeteer: true
