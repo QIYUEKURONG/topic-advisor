@@ -1,183 +1,240 @@
-# 热点话题助手 (Topic Advisor)
-
-AI 驱动的自媒体内容创作工具 — 一键抓取全网热点，AI 智能改写，多平台一键发布。
-
-## 功能特性
-
-### 多源热点抓取
-- 覆盖 **15+ 主流新闻源**：新浪、网易、搜狐、腾讯、凤凰网、澎湃、百度热搜、36氪、B站、微博、小红书等
-- **11 个话题方向**：AI、投资、娱乐、体育、数码、健康、汽车、教育、美食、房产、心理学
-- 不选话题时自动抓取全类型综合热点
-- 智能去重（URL + 标题模糊匹配）
-- 敏感词过滤、内容评分排序
-
-### AI 智能改写
-- 支持 **7 种平台风格**：今日头条、微信公众号、小红书、知乎、抖音、微博、通用
-- 多 AI 供应商支持：DeepSeek、OpenAI、Claude、Moonshot、通义千问
-- 自动 Markdown 排版（加粗、引用、分段）
-- 标题全新角度改写，非简单修改
-
-### 内容管理
-- 文章/视频分类筛选
-- 话题评分排序
-- 标题在线编辑
-- 一键复制全文 + 图片（HTML 富文本格式，可直接粘贴到编辑器）
-- 图片代理加载（绕过防盗链）
-
-### 发布集成
-- 今日头条草稿箱一键同步
-- 导出到本地文件
+<p align="center">
+  <h1 align="center">🔥 Topic Advisor</h1>
+  <p align="center">
+    <strong>AI-Powered Content Creation Tool</strong>
+  </p>
+  <p align="center">
+    Crawl trending topics · AI rewriting · Multi-platform styling · Rich-text copy with images
+  </p>
+  <p align="center">
+    <a href="#quick-start">Quick Start</a> •
+    <a href="#features">Features</a> •
+    <a href="#desktop-app">Desktop App</a> •
+    <a href="#architecture">Architecture</a>
+  </p>
+</p>
 
 ---
 
-## 快速开始
+## ✨ Features
 
-### 环境要求
+<table>
+<tr>
+<td width="50%">
 
-- **Node.js** >= 18
-- **pnpm** >= 8（推荐）或 npm
+### 📡 Multi-Source Crawling
+Aggregate trending content from **15+ news sources** in a single click.
 
-### 安装
+- Sina · NetEase · Sohu · Tencent · iFeng
+- ThePaper · Baidu Hot · 36Kr · IT Home
+- Bilibili · Weibo · Xiaohongshu
+- QbitAI · Jiqizhixin (AI-focused sources)
+
+</td>
+<td width="50%">
+
+### 🤖 AI-Powered Rewriting
+Connect to leading AI models to automatically rewrite content, ready to publish.
+
+- **7 platform styles**: WeChat / Xiaohongshu / Zhihu / Douyin / Weibo / Toutiao / Generic
+- **Markdown formatting**: Bold, quotes, structured paragraphs
+- Completely new titles from fresh angles
+- Supports DeepSeek / OpenAI / Claude / Moonshot / Qwen
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### 🏷️ 11 Topic Categories
+Focus on your niche — each category comes with dedicated search sources and keyword sets.
+
+`AI` `Investment` `Entertainment` `Sports` `Tech` `Health` `Automotive` `Education` `Food` `Real Estate` `Psychology`
+
+> No topic selected = comprehensive trending content across all categories
+
+</td>
+<td width="50%">
+
+### 📋 One-Click Copy & Publish
+Copy preserves formatting and images — paste directly into any editor.
+
+- **Rich-text copy**: Title + body + images in HTML format
+- **Image proxy**: Server-side forwarding bypasses hotlink protection
+- **Platform integration**: One-click sync to draft boxes
+- **Local export**: Batch export to files
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+| Tool | Version |
+|------|---------|
+| Node.js | >= 18 |
+| pnpm | >= 8 (recommended) |
+
+### Install & Run
 
 ```bash
-# 克隆仓库
-git clone https://github.com/your-username/toutiao-topic-advisor.git
-cd toutiao-topic-advisor
+# 1. Clone the repository
+git clone https://github.com/QIYUEKURONG/topic-advisor.git
+cd topic-advisor
 
-# 安装依赖
+# 2. Install dependencies
 pnpm install
-```
 
-### 开发模式
-
-```bash
+# 3. Start in development mode
 pnpm dev
 ```
 
-启动后：
-- 后端 API：http://127.0.0.1:3721
-- 前端开发服务器：http://localhost:5173（带热更新）
+Open your browser:
 
-### 生产模式
+| Service | URL |
+|---------|-----|
+| Frontend (dev) | http://localhost:5173 |
+| Backend API | http://127.0.0.1:3721 |
+
+### Production
 
 ```bash
-# 构建前端 + 后端
-pnpm build
-
-# 启动服务
-pnpm start
+pnpm build    # Build frontend & backend
+pnpm start    # Start server (visit http://127.0.0.1:3721)
 ```
-
-访问 http://127.0.0.1:3721 使用。
 
 ---
 
-## 桌面应用
+## 💻 Desktop App
 
-### 运行桌面版（开发）
-
-```bash
-pnpm electron:dev
-```
-
-### 构建安装包
+Package as a standalone Mac / Windows application:
 
 ```bash
-# Mac (DMG)
+# Mac (.dmg)
 pnpm dist:mac
 
-# Windows (NSIS 安装包)
+# Windows (.exe installer)
 pnpm dist:win
 
-# 同时构建 Mac + Windows
+# Build for both platforms
 pnpm dist:all
 ```
 
-构建产物在 `release/` 目录下。
+> Output goes to the `release/` directory
 
 ---
 
-## 使用指南
+## 📖 Usage Guide
 
-### 1. 配置 AI
+### Step 1 — Configure AI
 
-进入 **设置** 页面，选择 AI 供应商并填入 API Key：
+Go to **⚙️ Settings** and select your AI provider with API key.
 
-| 供应商 | 获取方式 |
-|--------|---------|
-| DeepSeek | https://platform.deepseek.com |
-| OpenAI | https://platform.openai.com |
-| Claude | https://console.anthropic.com |
-| Moonshot | https://platform.moonshot.cn |
-| 通义千问 | https://dashscope.console.aliyun.com |
+| Provider | URL | Best For |
+|----------|-----|----------|
+| DeepSeek | platform.deepseek.com | Best value, excellent Chinese |
+| OpenAI | platform.openai.com | GPT-4o, strong all-around |
+| Claude | console.anthropic.com | High quality long-form writing |
+| Moonshot | platform.moonshot.cn | Fast access from China |
+| Qwen | dashscope.console.aliyun.com | Alibaba Cloud ecosystem |
 
-### 2. 抓取内容
+### Step 2 — Crawl Content
 
-1. 在主页选择抓取数量（默认 20）
-2. 可选：选择话题方向（AI、投资、娱乐等）
-3. 点击"开始抓取"
-4. 等待抓取完成，自动跳转到候选内容页
+1. Set the number of articles to crawl
+2. Optionally select a topic category
+3. Click **Start Crawl**
+4. Watch real-time progress via SSE
 
-### 3. AI 改写
+### Step 3 — AI Rewrite
 
-1. 在候选内容页，点击文章的"AI 改写"按钮
-2. 选择目标平台风格（公众号、头条、小红书等）
-3. 等待改写完成
-4. 点击"查看重写内容"预览
-5. 点击"复制全文+图片"一键复制到剪贴板
+1. Click the **🤖 AI Rewrite** button on any article
+2. Choose a target platform style
+3. Preview the rewritten content (rendered Markdown)
+4. Click **Copy All + Images** for one-click clipboard
 
-### 4. 发布
+### Step 4 — Publish
 
-- **公众号/小红书**：复制内容后粘贴到对应编辑器
-- **今日头条**：使用内置的头条号登录功能，一键同步到草稿箱
+- **WeChat / Xiaohongshu**: Paste into their respective editors
+- **Toutiao**: Use built-in login to sync directly to draft box
 
 ---
 
-## 项目结构
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────┐
+│                  Electron Shell                  │
+│  ┌───────────────────┐  ┌─────────────────────┐  │
+│  │   React Frontend  │  │   Fastify Backend   │  │
+│  │                   │  │                     │  │
+│  │  • Vite + HMR     │  │  • 15+ Crawlers     │  │
+│  │  • Tailwind CSS   │◄─┤  • AI Rewriter      │  │
+│  │  • React Router   │  │  • Image Proxy      │  │
+│  │  • React Markdown │  │  • SSE Streaming    │  │
+│  │                   │  │  • Task Pipeline    │  │
+│  └───────────────────┘  └─────────────────────┘  │
+└─────────────────────────────────────────────────┘
+```
+
+### Project Structure
 
 ```
 toutiao-topic-advisor/
-├── server/                 # 后端（Fastify + TypeScript）
+├── server/                 # Backend service
 │   ├── src/
-│   │   ├── crawlers/       # 各新闻源爬虫适配器
-│   │   ├── services/       # 核心服务（评分、过滤、改写、存储）
-│   │   ├── routes/         # API 路由
-│   │   ├── config/         # 配置管理
-│   │   └── index.ts        # 入口
+│   │   ├── crawlers/       # News source adapters (15+)
+│   │   ├── services/       # Core services
+│   │   │   ├── task-runner.ts   # Crawl pipeline orchestrator
+│   │   │   ├── rewriter.ts      # AI rewriting engine
+│   │   │   ├── scorer.ts        # Content scoring
+│   │   │   └── filter.ts        # Content filtering
+│   │   ├── routes/         # API routes
+│   │   └── config/         # Configuration
 │   └── package.json
-├── web/                    # 前端（React + Vite + Tailwind）
+├── web/                    # Frontend UI
 │   ├── src/
-│   │   ├── pages/          # 页面组件
-│   │   ├── lib/            # API 客户端
-│   │   └── App.tsx         # 路由配置
+│   │   ├── pages/
+│   │   │   ├── Dashboard.tsx    # Crawl console
+│   │   │   ├── Candidates.tsx   # Content management
+│   │   │   └── Settings.tsx     # AI configuration
+│   │   └── lib/api.ts      # API client
 │   └── package.json
-├── electron/               # Electron 桌面封装
+├── electron/               # Desktop wrapper
 │   └── main.cjs
-├── package.json            # 根配置 + 构建脚本
+├── package.json            # Root config + build scripts
 └── README.md
 ```
 
-## API 接口
+### API Reference
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | `/api/tasks` | 创建抓取任务 |
-| GET | `/api/tasks` | 获取任务列表 |
-| GET | `/api/tasks/:id` | 获取任务详情 |
-| POST | `/api/tasks/:id/rewrite/:articleId` | AI 改写文章 |
-| GET | `/api/tasks/:id/sse` | SSE 实时进度 |
-| GET | `/api/settings` | 获取设置 |
-| PUT | `/api/settings` | 更新设置 |
-| GET | `/api/image-proxy?url=` | 图片代理 |
-| GET | `/api/platforms` | 获取平台列表 |
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/tasks` | Create a crawl task |
+| `GET` | `/api/tasks` | List all tasks |
+| `GET` | `/api/tasks/:id` | Get task details + candidates |
+| `GET` | `/api/tasks/:id/sse` | SSE real-time progress |
+| `POST` | `/api/tasks/:id/rewrite/:articleId` | AI rewrite an article |
+| `GET` | `/api/settings` | Get app settings |
+| `PUT` | `/api/settings` | Update app settings |
+| `GET` | `/api/image-proxy?url=` | Image proxy (bypass hotlinking) |
+| `GET` | `/api/platforms` | List available rewrite platforms |
 
-## 技术栈
+### Tech Stack
 
-- **后端**：Fastify, TypeScript, Cheerio, Undici, Puppeteer
-- **前端**：React 19, Vite, Tailwind CSS, React Router, React Markdown
-- **桌面**：Electron
-- **AI**：DeepSeek / OpenAI / Claude / Moonshot / 通义千问 API
+| Layer | Technologies |
+|-------|-------------|
+| Frontend | React 19, Vite, Tailwind CSS, React Router, React Markdown |
+| Backend | Fastify, TypeScript, Cheerio, Undici, Puppeteer |
+| AI | DeepSeek / OpenAI / Claude / Moonshot / Qwen API |
+| Desktop | Electron, electron-builder |
+| Build | pnpm workspaces, TypeScript, Vite |
 
-## License
+---
+
+## 📄 License
 
 MIT

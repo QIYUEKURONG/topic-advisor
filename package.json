@@ -1,9 +1,9 @@
 {
-  "name": "toutiao-topic-advisor",
+  "name": "topic-advisor",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "AI 自媒体内容助手 — 一键抓取热点、AI 智能改写、多平台发布",
+  "description": "AI-powered content creation tool — crawl trending topics, AI rewrite, multi-platform publish",
   "author": "Topic Advisor Team",
   "main": "electron/main.cjs",
   "scripts": {
@@ -17,7 +17,7 @@
   },
   "build": {
     "appId": "com.topic-advisor.app",
-    "productName": "热点话题助手",
+    "productName": "Topic Advisor",
     "directories": {
       "output": "release"
     },

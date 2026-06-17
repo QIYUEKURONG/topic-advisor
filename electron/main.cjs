@@ -70,7 +70,7 @@ function createWindow() {
     height: 860,
     minWidth: 900,
     minHeight: 600,
-    title: '热点话题助手',
+    title: 'Topic Advisor',
     titleBarStyle: 'hiddenInset',
     webPreferences: {
       nodeIntegration: false,
