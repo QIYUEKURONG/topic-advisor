@@ -29,7 +29,7 @@ export default function Candidates() {
   const [showLogs, setShowLogs] = useState(false);
   const [activeCategory, setActiveCategory] = useState<ArticleCategory | 'all'>('all');
   const [contentType, setContentType] = useState<ContentType>('all');
-  const [toutiaoUser, setToutiaoUser] = useState<{ loggedIn: boolean; username?: string } | null>(null);
+  const [toutiaoUser, setToutiaoUser] = useState<{ loggedIn: boolean; username?: string; available?: boolean } | null>(null);
   const [loginLoading, setLoginLoading] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [publishResults, setPublishResults] = useState<Array<{
@@ -252,44 +252,46 @@ export default function Candidates() {
         </div>
       </div>
 
-      <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-gray-600">头条号:</span>
-          {toutiaoUser?.loggedIn ? (
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 bg-green-500 rounded-full" />
-              <span className="text-sm text-green-700 font-medium">{toutiaoUser.username || '已登录'}</span>
-              <button
-                onClick={handleToutiaoLogout}
-                className="text-xs text-gray-400 hover:text-red-500 ml-1"
-              >
-                退出
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 bg-gray-400 rounded-full" />
-              <span className="text-sm text-gray-500">未登录</span>
-              <button
-                onClick={handleToutiaoLogin}
-                disabled={loginLoading}
-                className="px-3 py-1 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50"
-              >
-                {loginLoading ? '等待扫码...' : '登录头条'}
-              </button>
-            </div>
+      {toutiaoUser?.available !== false && (
+        <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-gray-600">头条号:</span>
+            {toutiaoUser?.loggedIn ? (
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-green-500 rounded-full" />
+                <span className="text-sm text-green-700 font-medium">{toutiaoUser.username || '已登录'}</span>
+                <button
+                  onClick={handleToutiaoLogout}
+                  className="text-xs text-gray-400 hover:text-red-500 ml-1"
+                >
+                  退出
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-gray-400 rounded-full" />
+                <span className="text-sm text-gray-500">未登录</span>
+                <button
+                  onClick={handleToutiaoLogin}
+                  disabled={loginLoading}
+                  className="px-3 py-1 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50"
+                >
+                  {loginLoading ? '等待扫码...' : '登录头条'}
+                </button>
+              </div>
+            )}
+          </div>
+          {toutiaoUser?.loggedIn && selected.size > 0 && (
+            <button
+              onClick={handlePublishDrafts}
+              disabled={publishing}
+              className="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 disabled:opacity-50 transition-colors"
+            >
+              {publishing ? '同步中...' : `同步 ${selected.size} 篇到草稿箱`}
+            </button>
           )}
         </div>
-        {toutiaoUser?.loggedIn && selected.size > 0 && (
-          <button
-            onClick={handlePublishDrafts}
-            disabled={publishing}
-            className="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 disabled:opacity-50 transition-colors"
-          >
-            {publishing ? '同步中...' : `同步 ${selected.size} 篇到草稿箱`}
-          </button>
-        )}
-      </div>
+      )}
 
       {publishResults && (
         <div className="mb-4 p-4 rounded-xl border text-sm space-y-2 bg-white">

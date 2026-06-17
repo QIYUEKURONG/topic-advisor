@@ -1,7 +1,16 @@
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 import type { Settings } from '../types.js';
 
+function getDefaultOutputDir(): string {
+  if (process.env.NODE_ENV === 'production') {
+    return join(homedir(), 'Documents', 'TopicAdvisor');
+  }
+  return './output';
+}
+
 export const DEFAULT_SETTINGS: Settings = {
-  outputDir: './output',
+  outputDir: getDefaultOutputDir(),
   crawlMaxCount: 200,
   requestIntervalMs: 1200,
   topicMode: 'standard',

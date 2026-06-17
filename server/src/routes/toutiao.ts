@@ -2,10 +2,22 @@ import type { FastifyInstance } from 'fastify';
 import { toutiaoService } from '../services/toutiao.js';
 import { loadTask } from '../services/storage.js';
 
+function isPuppeteerAvailable(): boolean {
+  try {
+    require.resolve('puppeteer');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function toutiaoRoutes(app: FastifyInstance) {
   app.get('/api/toutiao/status', async (_req, reply) => {
+    if (!isPuppeteerAvailable()) {
+      return reply.send({ loggedIn: false, available: false });
+    }
     const status = await toutiaoService.checkStatus();
-    return reply.send(status);
+    return reply.send({ ...status, available: true });
   });
 
   app.post('/api/toutiao/login', async (_req, reply) => {
