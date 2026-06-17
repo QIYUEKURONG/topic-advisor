@@ -24,7 +24,8 @@ async function main() {
   await app.register(toutiaoRoutes);
   await app.register(imageProxyRoutes);
 
-  const distPath = resolve(process.cwd(), '../web/dist');
+  const resourcesRoot = process.env.TOPIC_ADVISOR_RESOURCES || resolve(process.cwd(), '..');
+  const distPath = join(resourcesRoot, 'web', 'dist');
   if (existsSync(distPath)) {
     await app.register(fastifyStatic, {
       root: distPath,

@@ -1,9 +1,20 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
+import { homedir } from 'node:os';
+import { join, dirname } from 'node:path';
 import type { Settings } from '../types.js';
 import { DEFAULT_SETTINGS } from './defaults.js';
 
-const CONFIG_PATH = resolve(process.cwd(), 'data/config.json');
+function getConfigPath(): string {
+  if (process.env.TOPIC_ADVISOR_DATA) {
+    return join(process.env.TOPIC_ADVISOR_DATA, 'config.json');
+  }
+  if (process.env.NODE_ENV === 'production') {
+    return join(homedir(), '.topic-advisor', 'config.json');
+  }
+  return join(process.cwd(), 'data', 'config.json');
+}
+
+const CONFIG_PATH = getConfigPath();
 
 let cached: Settings | null = null;
 

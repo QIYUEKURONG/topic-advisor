@@ -1,9 +1,20 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import type { CrawlTask, CandidateArticle, Settings } from '../types.js';
 import { formatAsRepost, generateManifest } from './formatter.js';
 
-const TASKS_DIR = resolve(process.cwd(), 'data/tasks');
+function getDataRoot(): string {
+  if (process.env.TOPIC_ADVISOR_DATA) {
+    return process.env.TOPIC_ADVISOR_DATA;
+  }
+  if (process.env.NODE_ENV === 'production') {
+    return join(homedir(), '.topic-advisor');
+  }
+  return resolve(process.cwd(), 'data');
+}
+
+const TASKS_DIR = join(getDataRoot(), 'tasks');
 
 function ensureDir(dir: string) {
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });

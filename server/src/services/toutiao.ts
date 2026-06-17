@@ -1,4 +1,12 @@
-import puppeteer, { type Browser, type Cookie, type Page } from 'puppeteer';
+import type { Browser, Cookie, Page } from 'puppeteer';
+
+async function getPuppeteer() {
+  try {
+    return (await import('puppeteer')).default;
+  } catch {
+    throw new Error('Puppeteer is not available. This feature requires a development environment with puppeteer installed.');
+  }
+}
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -47,6 +55,7 @@ let activeBrowser: Browser | null = null;
 async function getBrowser(): Promise<Browser> {
   if (activeBrowser?.connected) return activeBrowser;
 
+  const puppeteer = await getPuppeteer();
   activeBrowser = await puppeteer.launch({
     headless: false,
     defaultViewport: { width: 1280, height: 900 },
@@ -148,9 +157,10 @@ export const toutiaoService = {
 
     const isVideo = !!(article.videoUrl || article.category === '视频');
 
-    let browser: Awaited<ReturnType<typeof puppeteer.launch>> | null = null;
+    let browser: Browser | null = null;
 
     try {
+      const puppeteer = await getPuppeteer();
       browser = await puppeteer.launch({
         headless: false,
         defaultViewport: { width: 1280, height: 900 },

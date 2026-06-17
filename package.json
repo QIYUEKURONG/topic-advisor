@@ -10,10 +10,11 @@
     "dev": "concurrently \"pnpm --filter server dev\" \"pnpm --filter web dev\"",
     "build": "pnpm --filter web build && pnpm --filter server build",
     "start": "pnpm --filter server start",
-    "electron:dev": "pnpm build && electron .",
-    "dist:mac": "pnpm build && electron-builder --mac",
-    "dist:win": "pnpm build && electron-builder --win",
-    "dist:all": "pnpm build && electron-builder --mac --win"
+    "bundle:server": "node scripts/bundle-server.mjs",
+    "electron:dev": "pnpm build && pnpm bundle:server && electron .",
+    "dist:mac": "pnpm build && pnpm bundle:server && electron-builder --mac",
+    "dist:win": "pnpm build && pnpm bundle:server && electron-builder --win",
+    "dist:all": "pnpm build && pnpm bundle:server && electron-builder --mac --win"
   },
   "build": {
     "appId": "com.topic-advisor.app",
@@ -26,20 +27,12 @@
     ],
     "extraResources": [
       {
-        "from": "server/dist",
-        "to": "server/dist"
-      },
-      {
-        "from": "server/node_modules",
-        "to": "server/node_modules"
-      },
-      {
-        "from": "server/package.json",
-        "to": "server/package.json"
+        "from": "server/bundle",
+        "to": "server/bundle"
       },
       {
         "from": "web/dist",
-        "to": "server/../web/dist"
+        "to": "web/dist"
       }
     ],
     "mac": {
@@ -47,7 +40,10 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["arm64", "x64"]
+          "arch": [
+            "arm64",
+            "x64"
+          ]
         }
       ]
     },
@@ -55,7 +51,9 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },
@@ -68,6 +66,7 @@
     "concurrently": "^9.1.2",
     "electron": "^42.4.0",
     "electron-builder": "^26.15.3",
+    "esbuild": "^0.28.1",
     "typescript": "^5.8.3"
   }
 }

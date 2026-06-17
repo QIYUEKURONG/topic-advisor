@@ -1,5 +1,5 @@
 const { app, BrowserWindow, shell } = require('electron');
-const { spawn } = require('child_process');
+const { fork } = require('child_process');
 const path = require('path');
 const http = require('http');
 
@@ -8,21 +8,33 @@ let serverProcess = null;
 let mainWindow = null;
 
 function getServerPath() {
-  const isDev = !app.isPackaged;
-  if (isDev) {
-    return path.join(__dirname, '..', 'server', 'dist', 'index.js');
+  if (!app.isPackaged) {
+    return path.join(__dirname, '..', 'server', 'bundle', 'index.mjs');
   }
-  return path.join(process.resourcesPath, 'server', 'dist', 'index.js');
+  return path.join(process.resourcesPath, 'server', 'bundle', 'index.mjs');
+}
+
+function getResourcesRoot() {
+  if (!app.isPackaged) {
+    return path.join(__dirname, '..');
+  }
+  return process.resourcesPath;
 }
 
 function startServer() {
   const serverEntry = getServerPath();
-  console.log('Starting server from:', serverEntry);
+  const resourcesRoot = getResourcesRoot();
+  console.log('Starting server:', serverEntry, 'resources:', resourcesRoot);
 
-  serverProcess = spawn('node', [serverEntry], {
-    cwd: path.dirname(serverEntry),
-    env: { ...process.env, NODE_ENV: 'production' },
-    stdio: ['pipe', 'pipe', 'pipe'],
+  serverProcess = fork(serverEntry, [], {
+    cwd: resourcesRoot,
+    env: {
+      ...process.env,
+      NODE_ENV: 'production',
+      ELECTRON_RUN_AS_NODE: '1',
+      TOPIC_ADVISOR_RESOURCES: resourcesRoot,
+    },
+    stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
   });
 
   serverProcess.stdout.on('data', (data) => {
