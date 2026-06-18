@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync, unlinkSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import type { CrawlTask, CandidateArticle, Settings } from '../types.js';
@@ -44,6 +44,19 @@ export function listTasks(): CrawlTask[] {
     })
     .filter((t): t is CrawlTask => t !== null)
     .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime());
+}
+
+export function clearHistory(): number {
+  ensureDir(TASKS_DIR);
+  const files = readdirSync(TASKS_DIR).filter((f) => f.endsWith('.json'));
+  for (const f of files) {
+    try {
+      unlinkSync(join(TASKS_DIR, f));
+    } catch {
+      // skip
+    }
+  }
+  return files.length;
 }
 
 export function getHistoryUrls(windowHours = 24): Set<string> {

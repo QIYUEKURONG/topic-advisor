@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { taskRunner } from '../services/task-runner.js';
-import { loadTask, listTasks, exportSelected, saveTask } from '../services/storage.js';
+import { loadTask, listTasks, exportSelected, saveTask, clearHistory } from '../services/storage.js';
 import { getSettings } from '../config/settings.js';
 import { rewriteArticle } from '../services/rewriter.js';
 import { PLATFORM_PROMPTS, type RewritePlatform } from '../types.js';
@@ -23,6 +23,11 @@ export async function tasksRoutes(app: FastifyInstance) {
     } catch (err) {
       return reply.status(400).send({ error: String(err) });
     }
+  });
+
+  app.delete('/api/tasks/history', async (_req, reply) => {
+    const deleted = clearHistory();
+    return reply.send({ deleted, message: `Cleared ${deleted} task records` });
   });
 
   app.get('/api/tasks', async (_req, reply) => {

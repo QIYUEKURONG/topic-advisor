@@ -9,6 +9,8 @@ export default function Settings() {
   const [showKey, setShowKey] = useState(false);
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'failed'>('idle');
   const [testError, setTestError] = useState<string | null>(null);
+  const [clearingHistory, setClearingHistory] = useState(false);
+  const [clearResult, setClearResult] = useState<string | null>(null);
 
   useEffect(() => {
     api.getSettings()
@@ -284,7 +286,7 @@ export default function Settings() {
             <p className="text-xs text-gray-400 mt-1">对比最近 N 小时内的历史去重，设 0 则不去重</p>
           </div>
 
-          <div className="flex flex-col justify-center">
+          <div className="flex flex-col gap-3 justify-center">
             <label className="flex items-center gap-3 cursor-pointer">
               <input
                 type="checkbox"
@@ -297,6 +299,31 @@ export default function Settings() {
                 <p className="text-xs text-gray-400">仅保留评分达标的内容</p>
               </div>
             </label>
+
+            <button
+              onClick={async () => {
+                if (!confirm('确定要清除所有去重记录吗？清除后下次爬取将不会跳过已抓取过的内容。')) return;
+                setClearingHistory(true);
+                setClearResult(null);
+                try {
+                  const res = await fetch('/api/tasks/history', { method: 'DELETE' });
+                  const data = await res.json();
+                  setClearResult(`已清除 ${data.deleted} 条记录`);
+                  setTimeout(() => setClearResult(null), 5000);
+                } catch (e: any) {
+                  setClearResult(`清除失败: ${e.message}`);
+                } finally {
+                  setClearingHistory(false);
+                }
+              }}
+              disabled={clearingHistory}
+              className="px-3 py-2 text-sm border border-orange-300 text-orange-600 rounded-lg hover:bg-orange-50 hover:border-orange-400 transition-colors disabled:opacity-50"
+            >
+              {clearingHistory ? '清除中...' : '清除去重记录'}
+            </button>
+            {clearResult && (
+              <span className="text-xs text-green-600">{clearResult}</span>
+            )}
           </div>
         </div>
 
