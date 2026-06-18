@@ -22,7 +22,7 @@ export function sensitiveFilter(article: RawArticle, sensitiveWords: string[]): 
   return { passed: hits.length === 0, hits };
 }
 
-export function lengthFilter(article: RawArticle, minLength = 50): boolean {
+export function lengthFilter(article: RawArticle, minLength = 20): boolean {
   if (article.videoUrl) return article.content.length >= 10;
   return article.content.length >= minLength;
 }

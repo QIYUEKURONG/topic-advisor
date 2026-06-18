@@ -60,6 +60,7 @@ export default function Settings() {
         enableRewrite: settings.enableRewrite,
         dedupWindowHours: settings.dedupWindowHours,
         enableScoreFilter: settings.enableScoreFilter,
+        sensitiveWords: settings.sensitiveWords,
       });
       setSettings(updated);
       setSaved(true);
@@ -269,18 +270,18 @@ export default function Settings() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 mb-5">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">去重窗口 (小时)</label>
             <input
               type="number"
-              min={1}
+              min={0}
               max={168}
               value={settings.dedupWindowHours}
-              onChange={(e) => setSettings({ ...settings, dedupWindowHours: Number(e.target.value) || 24 })}
+              onChange={(e) => setSettings({ ...settings, dedupWindowHours: Number(e.target.value) || 0 })}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm"
             />
-            <p className="text-xs text-gray-400 mt-1">对比最近 N 小时内的历史内容做去重</p>
+            <p className="text-xs text-gray-400 mt-1">对比最近 N 小时内的历史去重，设 0 则不去重</p>
           </div>
 
           <div className="flex flex-col justify-center">
@@ -296,6 +297,57 @@ export default function Settings() {
                 <p className="text-xs text-gray-400">仅保留评分达标的内容</p>
               </div>
             </label>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            敏感词过滤
+            <span className="text-xs text-gray-400 ml-1">（含有这些词的文章会被过滤）</span>
+          </label>
+          <div className="flex flex-wrap gap-2 mb-2 min-h-[36px] p-2 border border-gray-200 rounded-lg bg-gray-50">
+            {(settings.sensitiveWords || []).map((word, i) => (
+              <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-gray-300 rounded-md text-sm text-gray-700">
+                {word}
+                <button
+                  onClick={() => {
+                    const next = [...settings.sensitiveWords];
+                    next.splice(i, 1);
+                    setSettings({ ...settings, sensitiveWords: next });
+                  }}
+                  className="text-gray-400 hover:text-red-500 text-xs ml-0.5"
+                >
+                  ✕
+                </button>
+              </span>
+            ))}
+            {(!settings.sensitiveWords || settings.sensitiveWords.length === 0) && (
+              <span className="text-xs text-gray-400 py-1">无敏感词，所有内容都会保留</span>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              id="new-sensitive-word"
+              placeholder="输入敏感词后按回车添加"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  const input = e.target as HTMLInputElement;
+                  const word = input.value.trim();
+                  if (word && !(settings.sensitiveWords || []).includes(word)) {
+                    setSettings({ ...settings, sensitiveWords: [...(settings.sensitiveWords || []), word] });
+                    input.value = '';
+                  }
+                }
+              }}
+            />
+            <button
+              onClick={() => setSettings({ ...settings, sensitiveWords: [] })}
+              className="px-3 py-2 text-xs text-gray-500 hover:text-red-500 border border-gray-300 rounded-lg hover:border-red-300 transition-colors"
+            >
+              清空全部
+            </button>
           </div>
         </div>
       </section>

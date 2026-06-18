@@ -19,8 +19,16 @@ import {
 import { ithome } from './ithome.js';
 import { jiqizhixin } from './jiqizhixin.js';
 import { qbitai } from './qbitai.js';
+import { toutiaoHot } from './toutiao-hot.js';
+import { zhihuHot } from './zhihu.js';
+import { huxiu } from './huxiu.js';
+import { guancha } from './guancha.js';
+import { clsFinance } from './cls.js';
+import { douyinHot } from './douyin-hot.js';
+import { peopleDaily, bbc_zh, infzm, jiemian, wallstreetcn, caixin } from './rss.js';
 
 const ALL_CRAWLERS: CrawlerAdapter[] = [
+  // Core news sites
   sinaSociety,
   neteaseNews,
   sohuEnt,
@@ -29,9 +37,21 @@ const ALL_CRAWLERS: CrawlerAdapter[] = [
   thepaper,
   baiduHot,
   kr36,
+  ithome,
+  // Social & hot lists
   xiaohongshu,
   bilibiliHot,
   weiboHot,
+  toutiaoHot,
+  zhihuHot,
+  douyinHot,
+  // Deep content
+  huxiu,
+  guancha,
+  clsFinance,
+  jiqizhixin,
+  qbitai,
+  // Baidu topic searches
   baiduAISearch,
   baiduInvestSearch,
   baiduEntSearch,
@@ -43,9 +63,13 @@ const ALL_CRAWLERS: CrawlerAdapter[] = [
   baiduFoodSearch,
   baiduHouseSearch,
   baiduPsychSearch,
-  ithome,
-  jiqizhixin,
-  qbitai,
+  // RSS feeds
+  peopleDaily,
+  bbc_zh,
+  infzm,
+  jiemian,
+  wallstreetcn,
+  caixin,
 ];
 
 export function getEnabledCrawlers(enabledIds: string[]): CrawlerAdapter[] {

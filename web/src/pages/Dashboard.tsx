@@ -28,7 +28,7 @@ const TOPIC_PRESETS: Record<string, { label: string; icon: string; extraSources:
   invest: {
     label: '投资',
     icon: '💰',
-    extraSources: ['baidu-invest-search'],
+    extraSources: ['baidu-invest-search', 'cls-finance', 'wallstreetcn', 'caixin'],
     keywords: [
       '融资', 'IPO', '上市', 'A股', '港股', '美股', '纳斯达克',
       '估值', '市值', '营收', '利润', '财报', '季报', '年报',

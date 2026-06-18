@@ -16,8 +16,11 @@ export const DEFAULT_SETTINGS: Settings = {
   topicMode: 'standard',
   enabledSources: [
     'sina-society', 'netease-news', 'sohu-ent',
-    'tencent-news', 'ifeng-news', 'thepaper', 'baidu-hot', '36kr',
+    'tencent-news', 'ifeng-news', 'thepaper', 'baidu-hot', '36kr', 'ithome',
     'xiaohongshu', 'bilibili-hot', 'weibo-hot',
+    'toutiao-hot', 'zhihu-hot', 'douyin-hot',
+    'huxiu', 'guancha', 'cls-finance',
+    'wallstreetcn', 'jiemian',
   ],
   sensitiveWords: [
     '批判中国', '批判政府', '反华', '反共', '颠覆政权',
