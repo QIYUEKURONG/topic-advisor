@@ -1,5 +1,14 @@
 import { useState, useEffect } from 'react';
-import { api, type AppSettings, type AIProvider, type AIProviderConfig, AI_PROVIDER_OPTIONS } from '../lib/api';
+import {
+  api,
+  type AppSettings,
+  type AIProvider,
+  type AIProviderConfig,
+  type ImageProvider,
+  type ImageProviderConfig,
+  AI_PROVIDER_OPTIONS,
+  IMAGE_PROVIDER_OPTIONS,
+} from '../lib/api';
 
 export default function Settings() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
@@ -7,6 +16,7 @@ export default function Settings() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showKey, setShowKey] = useState(false);
+  const [showImageKey, setShowImageKey] = useState(false);
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'failed'>('idle');
   const [testError, setTestError] = useState<string | null>(null);
   const [clearingHistory, setClearingHistory] = useState(false);
@@ -21,6 +31,14 @@ export default function Settings() {
             apiKey: s.deepseekApiKey || '',
             baseUrl: s.deepseekBaseUrl || 'https://api.deepseek.com',
             model: 'deepseek-chat',
+          };
+        }
+        if (!s.imageProvider) {
+          s.imageProvider = {
+            provider: 'dashscope',
+            apiKey: '',
+            baseUrl: 'https://dashscope.aliyuncs.com',
+            model: 'wan2.7-image',
           };
         }
         setSettings(s);
@@ -50,6 +68,28 @@ export default function Settings() {
     });
   };
 
+  const handleImageProviderChange = (provider: ImageProvider) => {
+    if (!settings) return;
+    const option = IMAGE_PROVIDER_OPTIONS.find((o) => o.id === provider)!;
+    setSettings({
+      ...settings,
+      imageProvider: {
+        provider,
+        apiKey: settings.imageProvider?.apiKey || '',
+        baseUrl: option.baseUrl || settings.imageProvider?.baseUrl || '',
+        model: option.model || settings.imageProvider?.model || '',
+      },
+    });
+  };
+
+  const updateImageField = <K extends keyof ImageProviderConfig>(key: K, value: ImageProviderConfig[K]) => {
+    if (!settings) return;
+    setSettings({
+      ...settings,
+      imageProvider: { ...(settings.imageProvider || { provider: 'dashscope', apiKey: '', baseUrl: '', model: '' }), [key]: value },
+    });
+  };
+
   const handleSave = async () => {
     if (!settings) return;
     setSaving(true);
@@ -58,6 +98,7 @@ export default function Settings() {
     try {
       const updated = await api.updateSettings({
         aiProvider: settings.aiProvider,
+        imageProvider: settings.imageProvider,
         rewritePrompt: settings.rewritePrompt,
         enableRewrite: settings.enableRewrite,
         dedupWindowHours: settings.dedupWindowHours,
@@ -240,6 +281,98 @@ export default function Settings() {
           {!settings.aiProvider.apiKey && (
             <span className="text-xs text-gray-400">请先填入 API Key</span>
           )}
+        </div>
+      </section>
+
+      {/* Image Provider Section */}
+      <section className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-2xl">🎨</span>
+          <div>
+            <h3 className="text-lg font-semibold">图片生成配置</h3>
+            <p className="text-sm text-gray-500">用于漫画贴图功能的图片生成 API</p>
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">图片供应商</label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {IMAGE_PROVIDER_OPTIONS.map((opt) => (
+              <button
+                key={opt.id}
+                onClick={() => handleImageProviderChange(opt.id)}
+                className={`px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all ${
+                  settings.imageProvider?.provider === opt.id
+                    ? 'border-purple-500 bg-purple-50 text-purple-700 shadow-sm'
+                    : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            API Key
+            {settings.imageProvider?.apiKey && (
+              <span className="ml-2 text-xs text-green-600 font-normal">&#10003; 已配置</span>
+            )}
+          </label>
+          <div className="relative">
+            <input
+              type={showImageKey ? 'text' : 'password'}
+              value={settings.imageProvider?.apiKey || ''}
+              onChange={(e) => updateImageField('apiKey', e.target.value)}
+              placeholder={`输入你的 ${IMAGE_PROVIDER_OPTIONS.find(o => o.id === settings.imageProvider?.provider)?.label || ''} API Key`}
+              className="w-full px-4 py-2.5 pr-20 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent text-sm font-mono"
+            />
+            <button
+              onClick={() => setShowImageKey(!showImageKey)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-xs text-gray-500 hover:text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50"
+            >
+              {showImageKey ? '隐藏' : '显示'}
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 mt-1">
+            {settings.imageProvider?.provider === 'seedream'
+              ? '前往 火山引擎控制台 → API Key 管理 获取 ARK API Key'
+              : settings.imageProvider?.provider === 'dashscope'
+                ? '前往 阿里云百炼控制台 获取 DashScope API Key'
+                : settings.imageProvider?.provider === 'cogview'
+                  ? '前往 智谱AI开放平台 获取 API Key'
+                  : '输入自定义 API Key'}
+          </p>
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">API Base URL</label>
+          <input
+            type="text"
+            value={settings.imageProvider?.baseUrl || ''}
+            onChange={(e) => updateImageField('baseUrl', e.target.value)}
+            placeholder="https://..."
+            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent text-sm font-mono"
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">模型名称</label>
+          <input
+            type="text"
+            value={settings.imageProvider?.model || ''}
+            onChange={(e) => updateImageField('model', e.target.value)}
+            placeholder="model-name"
+            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent text-sm font-mono"
+          />
+        </div>
+
+        <div className="p-3 bg-purple-50 rounded-lg text-xs text-purple-700">
+          <strong>价格参考：</strong>
+          即梦 Seedream 5.0 Lite 约 0.22 元/张 (50张免费) · 
+          通义万相 wanx-v1 约 0.10 元/张 (50张免费) · 
+          智谱 CogView-4 约 0.06 元/次
         </div>
       </section>
 

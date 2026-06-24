@@ -33,6 +33,10 @@
       {
         "from": "web/dist",
         "to": "web/dist"
+      },
+      {
+        "from": "server/node_modules/sharp",
+        "to": "server/node_modules/sharp"
       }
     ],
     "mac": {

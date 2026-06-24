@@ -106,6 +106,138 @@ export const AI_PROVIDER_DEFAULTS: Record<AIProvider, { baseUrl: string; model: 
   custom: { baseUrl: '', model: '', label: '自定义' },
 };
 
+export type ImageProvider = 'seedream' | 'dashscope' | 'cogview' | 'custom';
+
+export interface ImageProviderConfig {
+  provider: ImageProvider;
+  apiKey: string;
+  baseUrl: string;
+  model: string;
+}
+
+export const IMAGE_PROVIDER_DEFAULTS: Record<ImageProvider, { baseUrl: string; model: string; label: string }> = {
+  seedream: {
+    baseUrl: 'https://ark.cn-beijing.volces.com',
+    model: 'doubao-seedream-5-0-lite-260128',
+    label: '即梦 Seedream (火山引擎)',
+  },
+  dashscope: {
+    baseUrl: 'https://dashscope.aliyuncs.com',
+    model: 'wanx-v1',
+    label: '通义万相 (阿里云)',
+  },
+  cogview: {
+    baseUrl: 'https://open.bigmodel.cn',
+    model: 'cogView-4-250304',
+    label: '智谱 CogView-4',
+  },
+  custom: { baseUrl: '', model: '', label: '自定义' },
+};
+
+export type ComicStyle =
+  | 'warm' | 'cute' | 'business' | 'retro' | 'simple'
+  | 'watercolor' | 'pixel' | 'ukiyoe' | 'poster' | 'sketch' | 'anime';
+
+export const COMIC_STYLES: Record<ComicStyle, { label: string; description: string; promptHint: string }> = {
+  warm: { label: '温馨日常', description: '暖色调家庭风格', promptHint: 'warm family illustration, soft colors, cozy home scene, hand-drawn style' },
+  cute: { label: '可爱卡通', description: '圆润Q版角色', promptHint: 'cute chibi cartoon, round characters, pastel colors, kawaii style' },
+  business: { label: '商务简约', description: '扁平化职场风', promptHint: 'flat design, business illustration, minimalist, corporate style' },
+  retro: { label: '复古怀旧', description: '80年代怀旧画风', promptHint: 'retro vintage illustration, 1980s nostalgia, warm sepia tones' },
+  simple: { label: '简笔漫画', description: '黑白线条风格', promptHint: 'simple line drawing comic, black and white, clean lines, manga style' },
+  watercolor: { label: '水彩插画', description: '轻柔水彩质感', promptHint: 'watercolor painting style, soft wash, gentle brushstrokes, pastel watercolor illustration' },
+  pixel: { label: '像素风', description: '复古游戏像素', promptHint: 'pixel art style, 16-bit retro game art, blocky characters, vibrant pixel colors' },
+  ukiyoe: { label: '国风水墨', description: '中国水墨画风', promptHint: 'Chinese ink wash painting style, traditional brush strokes, elegant minimalist, sumi-e' },
+  poster: { label: '海报风', description: '大字报宣传画', promptHint: 'bold propaganda poster style, vivid colors, strong contrast, graphic design illustration' },
+  sketch: { label: '铅笔素描', description: '手绘铅笔线条', promptHint: 'pencil sketch style, hand drawn graphite, detailed shading, realistic pencil drawing' },
+  anime: { label: '日系动漫', description: '日本动漫画风', promptHint: 'Japanese anime illustration style, detailed anime characters, vivid colors, anime art' },
+};
+
+export type TextLayout = 'bar' | 'floating' | 'card' | 'minimal';
+
+export const TEXT_LAYOUTS: Record<TextLayout, { label: string; description: string }> = {
+  bar: { label: '经典条纹', description: '顶部标题 + 底部信息栏' },
+  floating: { label: '浮字投影', description: '文字直接浮在画面上' },
+  card: { label: '圆角卡片', description: '小卡片点缀在画面' },
+  minimal: { label: '极简底部', description: '仅底部一行薄字' },
+};
+
+export type FontStyle = 'default' | 'handwrite' | 'kai' | 'bold' | 'round' | 'elegant';
+
+export const FONT_STYLES: Record<FontStyle, { label: string; fontFamily: string; description: string }> = {
+  default: { label: '默认黑体', fontFamily: "'PingFang SC', 'Hiragino Sans GB', sans-serif", description: '清晰易读' },
+  handwrite: { label: '手写体', fontFamily: "'STXingkai', 'Xingkai SC', 'PingFang SC', cursive", description: '活泼有趣' },
+  kai: { label: '楷体', fontFamily: "'STKaiti', 'Kaiti SC', 'PingFang SC', serif", description: '端正优雅' },
+  bold: { label: '粗黑体', fontFamily: "'STHeiti', 'Heiti SC', 'PingFang SC', sans-serif", description: '醒目有力' },
+  round: { label: '圆体', fontFamily: "'Yuanti SC', 'PingFang SC', sans-serif", description: '圆润可爱' },
+  elegant: { label: '宋体', fontFamily: "'STSong', 'Songti SC', 'PingFang SC', serif", description: '典雅传统' },
+};
+
+export type FontColor = 'white' | 'yellow' | 'pink' | 'cyan' | 'orange' | 'lime';
+
+export const FONT_COLORS: Record<FontColor, { label: string; hex: string }> = {
+  white:  { label: '白色', hex: '#FFFFFF' },
+  yellow: { label: '明黄', hex: '#FFD54F' },
+  pink:   { label: '粉色', hex: '#F48FB1' },
+  cyan:   { label: '薄荷', hex: '#80CBC4' },
+  orange: { label: '橙色', hex: '#FFB74D' },
+  lime:   { label: '草绿', hex: '#AED581' },
+};
+
+export type ImageMode = 'comparison' | 'normal';
+
+export interface ImageConfig {
+  mode: ImageMode;
+  hint?: string;
+}
+
+export interface StickerRequest {
+  topic: string;
+  style: ComicStyle;
+  fontStyle: FontStyle;
+  fontColor: FontColor;
+  textLayout: TextLayout;
+  imageCount: number;
+  imageConfigs: ImageConfig[];
+}
+
+export interface ComparisonSide {
+  title: string;
+  scene: string;
+  emotion: string;
+}
+
+export interface ScriptImage {
+  mode: ImageMode;
+  title: string;
+  left?: ComparisonSide;
+  right?: ComparisonSide;
+  scene?: string;
+  caption?: string;
+  tips?: string[];
+  quote?: string;
+  copyText?: string;
+}
+
+export interface ComicScript {
+  topic: string;
+  overallTitle: string;
+  characterDescription: string;
+  images: ScriptImage[];
+}
+
+export interface GeneratedComic {
+  id: string;
+  topic: string;
+  style: ComicStyle;
+  script: ComicScript;
+  rawImages: string[];
+  finalImages: string[];
+  status: 'generating' | 'done' | 'failed';
+  error?: string;
+  createdAt: string;
+  version?: number;
+}
+
 export interface Settings {
   outputDir: string;
   crawlMaxCount: number;
@@ -119,6 +251,7 @@ export interface Settings {
   enableScoreFilter: boolean;
   enableRewrite: boolean;
   aiProvider: AIProviderConfig;
+  imageProvider: ImageProviderConfig;
   rewritePrompt: string;
   /** @deprecated use aiProvider.apiKey */
   deepseekApiKey: string;

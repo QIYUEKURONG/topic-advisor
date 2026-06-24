@@ -1,10 +1,12 @@
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Candidates from './pages/Candidates';
+import Stickers from './pages/Stickers';
 import Settings from './pages/Settings';
 
 const NAV_ITEMS = [
   { path: '/', label: '控制台', icon: '🎯' },
+  { path: '/stickers', label: '漫画贴图', icon: '🎨' },
   { path: '/settings', label: '设置', icon: '⚙️' },
 ];
 
@@ -43,6 +45,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/tasks/:id" element={<Candidates />} />
+          <Route path="/stickers" element={<Stickers />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>
       </main>

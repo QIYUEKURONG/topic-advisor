@@ -11,6 +11,7 @@ await build({
   minify: false,
   external: [
     'puppeteer',
+    'sharp',
   ],
   banner: {
     js: [

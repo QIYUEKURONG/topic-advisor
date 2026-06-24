@@ -26,6 +26,10 @@ function startServer() {
   const resourcesRoot = getResourcesRoot();
   console.log('Starting server:', serverEntry, 'resources:', resourcesRoot);
 
+  const nodeModulesPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'server', 'node_modules')
+    : path.join(__dirname, '..', 'server', 'node_modules');
+
   serverProcess = fork(serverEntry, [], {
     cwd: resourcesRoot,
     env: {
@@ -33,6 +37,7 @@ function startServer() {
       NODE_ENV: 'production',
       ELECTRON_RUN_AS_NODE: '1',
       TOPIC_ADVISOR_RESOURCES: resourcesRoot,
+      NODE_PATH: nodeModulesPath,
     },
     stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
   });

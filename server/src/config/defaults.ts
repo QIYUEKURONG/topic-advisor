@@ -44,6 +44,12 @@ export const DEFAULT_SETTINGS: Settings = {
     baseUrl: 'https://api.deepseek.com',
     model: 'deepseek-chat',
   },
+  imageProvider: {
+    provider: 'seedream',
+    apiKey: '',
+    baseUrl: 'https://ark.cn-beijing.volces.com',
+    model: 'doubao-seedream-5-0-lite-260128',
+  },
   rewritePrompt: '你是一位资深自媒体运营编辑，擅长取标题和内容改写。请根据以下新闻素材，重写一篇可以直接发布的文章。\n\n**标题要求（最重要）：**\n- 标题必须与原标题完全不同，不能只是简单调换语序或加减几个字\n- 用全新的角度和表达方式重新拟标题\n- 可以提炼新闻中最有冲击力、最有话题性的点作为标题切入\n- 善用疑问句、数字、对比、悬念等手法增强吸引力\n- 标题长度15-30字，不标题党但要有吸引力\n\n**正文排版要求（非常重要）：**\n1) 每篇文章中，核心观点、关键数据、重要人物名字等必须用 **加粗** 标记（每段至少有1-2处加粗）\n2) 每段之间必须空一行，段落简短（2-4句话），适合手机阅读\n3) 如果有多个要点，用小标题分隔，小标题也用 **加粗**\n4) 可以用 > 引用格式来突出金句或关键引言\n\n**内容要求：**\n1) 内容通顺、信息准确、有可读性\n2) 适当加入个人观点或分析\n3) 字数800-1500字',
   deepseekApiKey: '',
   deepseekBaseUrl: 'https://api.deepseek.com',

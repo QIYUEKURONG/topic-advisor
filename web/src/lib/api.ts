@@ -18,6 +18,115 @@ export const AI_PROVIDER_OPTIONS: Array<{ id: AIProvider; label: string; baseUrl
   { id: 'custom', label: '自定义', baseUrl: '', model: '' },
 ];
 
+export type ImageProvider = 'seedream' | 'dashscope' | 'cogview' | 'custom';
+
+export interface ImageProviderConfig {
+  provider: ImageProvider;
+  apiKey: string;
+  baseUrl: string;
+  model: string;
+}
+
+export const IMAGE_PROVIDER_OPTIONS: Array<{ id: ImageProvider; label: string; baseUrl: string; model: string }> = [
+  { id: 'seedream', label: '即梦 Seedream (火山引擎)', baseUrl: 'https://ark.cn-beijing.volces.com', model: 'doubao-seedream-5-0-lite-260128' },
+  { id: 'dashscope', label: '通义万相 (阿里云)', baseUrl: 'https://dashscope.aliyuncs.com', model: 'wanx-v1' },
+  { id: 'cogview', label: '智谱 CogView-4', baseUrl: 'https://open.bigmodel.cn', model: 'cogView-4-250304' },
+  { id: 'custom', label: '自定义', baseUrl: '', model: '' },
+];
+
+export type ComicStyle = 'warm' | 'cute' | 'business' | 'retro' | 'simple'
+  | 'watercolor' | 'pixel' | 'ukiyoe' | 'poster' | 'sketch' | 'anime';
+
+export const COMIC_STYLE_OPTIONS: Array<{ id: ComicStyle; label: string; description: string; emoji: string }> = [
+  { id: 'warm', label: '温馨日常', description: '暖色调家庭风格', emoji: '🏠' },
+  { id: 'cute', label: '可爱卡通', description: '圆润Q版角色', emoji: '🧸' },
+  { id: 'business', label: '商务简约', description: '扁平化职场风', emoji: '💼' },
+  { id: 'retro', label: '复古怀旧', description: '80年代怀旧画风', emoji: '📻' },
+  { id: 'simple', label: '简笔漫画', description: '黑白线条风格', emoji: '✏️' },
+  { id: 'watercolor', label: '水彩插画', description: '轻柔水彩质感', emoji: '🎨' },
+  { id: 'pixel', label: '像素风', description: '复古游戏像素', emoji: '👾' },
+  { id: 'ukiyoe', label: '国风水墨', description: '中国水墨画风', emoji: '🏯' },
+  { id: 'poster', label: '海报风', description: '大字报宣传画', emoji: '📢' },
+  { id: 'sketch', label: '铅笔素描', description: '手绘铅笔线条', emoji: '✎' },
+  { id: 'anime', label: '日系动漫', description: '日本动漫画风', emoji: '🌸' },
+];
+
+export type TextLayout = 'bar' | 'floating' | 'card' | 'minimal';
+
+export const TEXT_LAYOUT_OPTIONS: Array<{ id: TextLayout; label: string; description: string }> = [
+  { id: 'bar', label: '经典条纹', description: '顶部标题+底部信息栏' },
+  { id: 'floating', label: '浮字投影', description: '文字浮在画面上' },
+  { id: 'card', label: '圆角卡片', description: '小卡片点缀' },
+  { id: 'minimal', label: '极简底部', description: '仅底部一行' },
+];
+
+export type FontColor = 'white' | 'yellow' | 'pink' | 'cyan' | 'orange' | 'lime';
+
+export const FONT_COLOR_OPTIONS: Array<{ id: FontColor; label: string; hex: string }> = [
+  { id: 'white', label: '白色', hex: '#FFFFFF' },
+  { id: 'yellow', label: '明黄', hex: '#FFD54F' },
+  { id: 'pink', label: '粉色', hex: '#F48FB1' },
+  { id: 'cyan', label: '薄荷', hex: '#80CBC4' },
+  { id: 'orange', label: '橙色', hex: '#FFB74D' },
+  { id: 'lime', label: '草绿', hex: '#AED581' },
+];
+
+export type FontStyle = 'default' | 'handwrite' | 'kai' | 'bold' | 'round' | 'elegant';
+
+export const FONT_STYLE_OPTIONS: Array<{ id: FontStyle; label: string; description: string }> = [
+  { id: 'default', label: '默认黑体', description: '清晰易读' },
+  { id: 'handwrite', label: '手写体', description: '活泼有趣' },
+  { id: 'kai', label: '楷体', description: '端正优雅' },
+  { id: 'bold', label: '粗黑体', description: '醒目有力' },
+  { id: 'round', label: '圆体', description: '圆润可爱' },
+  { id: 'elegant', label: '宋体', description: '典雅传统' },
+];
+
+export type ImageMode = 'comparison' | 'normal';
+
+export interface ImageConfig {
+  mode: ImageMode;
+  hint?: string;
+}
+
+export interface ComparisonSide {
+  title: string;
+  scene: string;
+  emotion: string;
+}
+
+export interface ScriptImage {
+  mode: ImageMode;
+  title: string;
+  left?: ComparisonSide;
+  right?: ComparisonSide;
+  scene?: string;
+  caption?: string;
+  tips?: string[];
+  copyText?: string;
+  quote?: string;
+}
+
+export interface ComicScript {
+  topic: string;
+  overallTitle: string;
+  characterDescription: string;
+  images: ScriptImage[];
+}
+
+export interface GeneratedComic {
+  id: string;
+  topic: string;
+  style: ComicStyle;
+  script: ComicScript;
+  rawImages: string[];
+  finalImages: string[];
+  status: 'generating' | 'done' | 'failed';
+  error?: string;
+  createdAt: string;
+  version?: number;
+}
+
 export interface AppSettings {
   outputDir: string;
   crawlMaxCount: number;
@@ -31,6 +140,7 @@ export interface AppSettings {
   enableScoreFilter: boolean;
   enableRewrite: boolean;
   aiProvider: AIProviderConfig;
+  imageProvider: ImageProviderConfig;
   rewritePrompt: string;
   deepseekApiKey?: string;
   deepseekBaseUrl?: string;
@@ -180,7 +290,73 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ articleIds }),
     }),
+
+  listComics: () => request<GeneratedComic[]>('/stickers'),
+
+  getComic: (id: string) => request<GeneratedComic>(`/stickers/${id}`),
+
+  getComicImageUrl: (comicId: string, filename: string, version?: number) =>
+    `${BASE}/stickers/${comicId}/images/${filename}${version ? `?v=${version}` : ''}`,
+
+  recomposeComic: (comicId: string, fontStyle: FontStyle, textLayout: TextLayout, fontColor: FontColor) =>
+    request<GeneratedComic>(`/stickers/${comicId}/recompose`, {
+      method: 'POST',
+      body: JSON.stringify({ fontStyle, textLayout, fontColor }),
+    }),
+
+  getExportUrl: (comicId: string, layout: 'grid' | 'vertical' | 'horizontal' = 'grid') =>
+    `${BASE}/stickers/${comicId}/export?layout=${layout}`,
 };
+
+export function createStickerSSE(
+  topic: string,
+  style: ComicStyle,
+  fontStyle: FontStyle,
+  fontColor: FontColor,
+  textLayout: TextLayout,
+  imageConfigs: ImageConfig[],
+  onEvent: (event: { type: string; data: any }) => void,
+): EventSource {
+  const params = new URLSearchParams({
+    topic,
+    style,
+    fontStyle,
+    fontColor,
+    textLayout,
+    imageCount: String(imageConfigs.length),
+    configs: JSON.stringify(imageConfigs),
+  });
+  const es = new EventSource(`${BASE}/stickers/generate?${params}`);
+  let finished = false;
+
+  es.addEventListener('progress', (e) => {
+    onEvent({ type: 'progress', data: JSON.parse(e.data) });
+  });
+
+  es.addEventListener('complete', (e) => {
+    finished = true;
+    es.close();
+    onEvent({ type: 'complete', data: JSON.parse(e.data) });
+  });
+
+  es.addEventListener('error', (e: any) => {
+    if (finished) return;
+    try {
+      const data = e.data ? JSON.parse(e.data) : { message: '生成失败，请检查 API 配置' };
+      finished = true;
+      es.close();
+      onEvent({ type: 'error', data });
+    } catch {
+      if (es.readyState !== EventSource.CLOSED) {
+        finished = true;
+        es.close();
+        onEvent({ type: 'error', data: { message: '连接中断，请检查服务器日志' } });
+      }
+    }
+  });
+
+  return es;
+}
 
 export function createSSE(taskId: string, onEvent: (event: { type: string; data: any }) => void) {
   const es = new EventSource(`${BASE}/tasks/${taskId}/events`);
