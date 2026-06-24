@@ -56,5 +56,24 @@ if (existsSync(pnpmStore)) {
     }
   }
 
+  const sharpPeerDeps = ['detect-libc', 'semver'];
+  for (const dep of sharpPeerDeps) {
+    const entries = readdirSync(pnpmStore).filter(e => e.startsWith(`${dep}@`));
+    if (entries.length) {
+      const src = join(pnpmStore, entries[0], 'node_modules', dep);
+      if (existsSync(src)) cpSync(src, join(dest, dep), { recursive: true, dereference: true });
+    }
+  }
+
+  // Copy @img/colour
+  const colourEntries = readdirSync(pnpmStore).filter(e => e.startsWith('@img+colour@'));
+  for (const entry of colourEntries) {
+    const src = join(pnpmStore, entry, 'node_modules', '@img', 'colour');
+    if (existsSync(src)) {
+      mkdirSync(join(dest, '@img', 'colour'), { recursive: true });
+      cpSync(src, join(dest, '@img', 'colour'), { recursive: true, dereference: true });
+    }
+  }
+
   console.log('Sharp native deps copied to server/node_modules_electron/');
 }
