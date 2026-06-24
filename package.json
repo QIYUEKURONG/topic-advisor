@@ -35,8 +35,8 @@
         "to": "web/dist"
       },
       {
-        "from": "server/node_modules/sharp",
-        "to": "server/node_modules/sharp"
+        "from": "server/node_modules_electron",
+        "to": "server/node_modules"
       }
     ],
     "mac": {
