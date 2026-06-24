@@ -306,7 +306,48 @@ export const api = {
 
   getExportUrl: (comicId: string, layout: 'grid' | 'vertical' | 'horizontal' = 'grid') =>
     `${BASE}/stickers/${comicId}/export?layout=${layout}`,
+
+  listShares: () => request<GeneratedShare[]>('/shares'),
+
+  getShare: (id: string) => request<GeneratedShare>(`/shares/${id}`),
 };
+
+// ── Share Generator types ──
+
+export interface ShareSection {
+  heading: string;
+  body: string;
+  comicHint?: string;
+}
+
+export interface ShareArticle {
+  title: string;
+  hook: string;
+  sections: ShareSection[];
+  conclusion: string;
+  tags: string[];
+}
+
+export interface ScrapedContent {
+  urlType: 'github' | 'paper' | 'article';
+  url: string;
+  title: string;
+  description: string;
+  body: string;
+  meta: Record<string, string | number>;
+}
+
+export interface GeneratedShare {
+  id: string;
+  url: string;
+  urlType: 'github' | 'paper' | 'article';
+  scraped: ScrapedContent;
+  article: ShareArticle;
+  comicId?: string;
+  status: 'scraping' | 'generating' | 'comics' | 'done' | 'failed';
+  error?: string;
+  createdAt: string;
+}
 
 export function createStickerSSE(
   topic: string,
@@ -351,6 +392,49 @@ export function createStickerSSE(
         finished = true;
         es.close();
         onEvent({ type: 'error', data: { message: '连接中断，请检查服务器日志' } });
+      }
+    }
+  });
+
+  return es;
+}
+
+export function createShareSSE(
+  url: string,
+  enableComics: boolean,
+  comicStyle: ComicStyle,
+  onEvent: (event: { type: string; data: any }) => void,
+): EventSource {
+  const params = new URLSearchParams({
+    url,
+    enableComics: String(enableComics),
+    comicStyle,
+  });
+  const es = new EventSource(`${BASE}/shares/generate?${params}`);
+  let finished = false;
+
+  es.addEventListener('progress', (e) => {
+    onEvent({ type: 'progress', data: JSON.parse(e.data) });
+  });
+
+  es.addEventListener('complete', (e) => {
+    finished = true;
+    es.close();
+    onEvent({ type: 'complete', data: JSON.parse(e.data) });
+  });
+
+  es.addEventListener('error', (e: any) => {
+    if (finished) return;
+    try {
+      const data = e.data ? JSON.parse(e.data) : { message: '生成失败，请检查 API 配置' };
+      finished = true;
+      es.close();
+      onEvent({ type: 'error', data });
+    } catch {
+      if (es.readyState !== EventSource.CLOSED) {
+        finished = true;
+        es.close();
+        onEvent({ type: 'error', data: { message: '连接中断' } });
       }
     }
   });

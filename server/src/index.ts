@@ -8,6 +8,7 @@ import { settingsRoutes } from './routes/settings.js';
 import { toutiaoRoutes } from './routes/toutiao.js';
 import { imageProxyRoutes } from './routes/image-proxy.js';
 import { stickerRoutes } from './routes/stickers.js';
+import { shareRoutes } from './routes/shares.js';
 
 const PORT = 3721;
 
@@ -25,6 +26,7 @@ async function main() {
   await app.register(toutiaoRoutes);
   await app.register(imageProxyRoutes);
   await app.register(stickerRoutes);
+  await app.register(shareRoutes);
 
   const resourcesRoot = process.env.TOPIC_ADVISOR_RESOURCES || resolve(process.cwd(), '..');
   const distPath = join(resourcesRoot, 'web', 'dist');

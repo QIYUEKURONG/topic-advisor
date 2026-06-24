@@ -259,6 +259,45 @@ export interface Settings {
   deepseekBaseUrl: string;
 }
 
+// ── Share Generator ──
+
+export type UrlType = 'github' | 'paper' | 'article';
+
+export interface ScrapedContent {
+  urlType: UrlType;
+  url: string;
+  title: string;
+  description: string;
+  body: string;
+  meta: Record<string, string | number>;
+}
+
+export interface ShareSection {
+  heading: string;
+  body: string;
+  comicHint?: string;
+}
+
+export interface ShareArticle {
+  title: string;
+  hook: string;
+  sections: ShareSection[];
+  conclusion: string;
+  tags: string[];
+}
+
+export interface GeneratedShare {
+  id: string;
+  url: string;
+  urlType: UrlType;
+  scraped: ScrapedContent;
+  article: ShareArticle;
+  comicId?: string;
+  status: 'scraping' | 'generating' | 'comics' | 'done' | 'failed';
+  error?: string;
+  createdAt: string;
+}
+
 export interface CrawlerAdapter {
   id: string;
   name: string;
