@@ -281,6 +281,25 @@ export default function ShareGenerator() {
               </a>
             </div>
 
+            {share.scraped.images && share.scraped.images.length > 0 && (
+              <div className="bg-white rounded-xl shadow-sm border p-4">
+                <h4 className="font-semibold text-sm mb-3">项目截图/演示</h4>
+                <div className="space-y-2">
+                  {share.scraped.images.map((img, i) => (
+                    <a key={i} href={img} target="_blank" rel="noopener noreferrer">
+                      <img
+                        src={img}
+                        alt={`Screenshot ${i + 1}`}
+                        className="rounded-lg border w-full hover:opacity-80 transition-opacity cursor-pointer"
+                        loading="lazy"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {linkedComic && (
               <div className="bg-white rounded-xl shadow-sm border p-4">
                 <h4 className="font-semibold text-sm mb-3">配套漫画</h4>

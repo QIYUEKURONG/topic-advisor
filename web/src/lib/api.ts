@@ -337,6 +337,7 @@ export interface ScrapedContent {
   title: string;
   description: string;
   body: string;
+  images: string[];
   meta: Record<string, string | number>;
 }
 

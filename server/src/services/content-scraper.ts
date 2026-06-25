@@ -24,8 +24,29 @@ async function scrapeGitHub(url: string): Promise<ScrapedContent> {
   const repoData = (await repoResp.json()) as Record<string, any>;
 
   let readme = '';
+  const images: string[] = [];
   if (readmeResp.ok) {
     readme = await readmeResp.text();
+
+    const imgPatterns = [
+      /!\[([^\]]*)\]\(([^)]+)\)/g,                              // ![alt](url)
+      /<img[^>]+src=["']([^"']+)["'][^>]*>/gi,                  // <img src="url">
+    ];
+    for (const pattern of imgPatterns) {
+      for (const m of readme.matchAll(pattern)) {
+        let imgUrl = pattern === imgPatterns[0] ? m[2] : m[1];
+        if (!imgUrl) continue;
+        if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://')) {
+          // skip badges/shields
+          if (/shields\.io|badge|\.svg(\?|$)/i.test(imgUrl)) continue;
+          images.push(imgUrl);
+        } else if (!imgUrl.startsWith('#') && !imgUrl.startsWith('data:')) {
+          const rawBase = `https://raw.githubusercontent.com/${owner}/${repo}/${repoData.default_branch || 'main'}`;
+          images.push(`${rawBase}/${imgUrl.replace(/^\.?\//, '')}`);
+        }
+      }
+    }
+
     if (readme.length > 15_000) readme = readme.slice(0, 15_000) + '\n\n... (内容已截断)';
   }
 
@@ -35,6 +56,7 @@ async function scrapeGitHub(url: string): Promise<ScrapedContent> {
     title: repoData.full_name || `${owner}/${repo}`,
     description: repoData.description || '',
     body: readme,
+    images: images.slice(0, 10),
     meta: {
       stars: repoData.stargazers_count || 0,
       forks: repoData.forks_count || 0,
@@ -80,7 +102,14 @@ async function scrapeWebPage(url: string, urlType: UrlType): Promise<ScrapedCont
 
   if (body.length > 15_000) body = body.slice(0, 15_000) + ' ... (内容已截断)';
 
-  return { urlType, url, title, description, body, meta: {} };
+  const images: string[] = [];
+  const ogImage = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
+  if (ogImage?.[1]) images.push(ogImage[1]);
+  for (const m of html.matchAll(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi)) {
+    if (m[1] && m[1].startsWith('http') && images.length < 10) images.push(m[1]);
+  }
+
+  return { urlType, url, title, description, body, images: images.slice(0, 10), meta: {} };
 }
 
 export async function scrapeUrl(url: string): Promise<ScrapedContent> {
