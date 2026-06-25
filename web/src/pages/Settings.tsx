@@ -104,6 +104,7 @@ export default function Settings() {
         dedupWindowHours: settings.dedupWindowHours,
         enableScoreFilter: settings.enableScoreFilter,
         sensitiveWords: settings.sensitiveWords,
+        githubToken: settings.githubToken,
       });
       setSettings(updated);
       setSaved(true);
@@ -374,6 +375,27 @@ export default function Settings() {
           通义万相 wanx-v1 约 0.10 元/张 (50张免费) · 
           智谱 CogView-4 约 0.06 元/次
         </div>
+      </section>
+
+      {/* GitHub Token */}
+      <section className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-2xl">🐙</span>
+          <div>
+            <h3 className="text-lg font-semibold">GitHub Token</h3>
+            <p className="text-sm text-gray-500">用于分享生成器抓取 GitHub 项目信息（可选，不配则有频率限制）</p>
+          </div>
+        </div>
+        <input
+          type="password"
+          value={settings.githubToken || ''}
+          onChange={(e) => setSettings({ ...settings, githubToken: e.target.value })}
+          placeholder="ghp_xxxxxxxxxxxx"
+          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent text-sm font-mono"
+        />
+        <p className="text-xs text-gray-400 mt-1">
+          前往 github.com/settings/tokens 创建 Personal Access Token（不需要任何权限，默认 public repo 即可）
+        </p>
       </section>
 
       {/* Rewrite Prompt Section */}

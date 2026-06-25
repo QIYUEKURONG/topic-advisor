@@ -256,6 +256,7 @@ export interface Settings {
   aiProvider: AIProviderConfig;
   imageProvider: ImageProviderConfig;
   rewritePrompt: string;
+  githubToken: string;
   /** @deprecated use aiProvider.apiKey */
   deepseekApiKey: string;
   /** @deprecated use aiProvider.baseUrl */

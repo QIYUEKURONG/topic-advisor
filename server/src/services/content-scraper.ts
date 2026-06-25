@@ -1,5 +1,6 @@
 import { fetch } from 'undici';
 import type { UrlType, ScrapedContent } from '../types.js';
+import { getSettings } from '../config/settings.js';
 
 function detectUrlType(url: string): UrlType {
   if (/github\.com\/[\w.-]+\/[\w.-]+/.test(url)) return 'github';
@@ -14,6 +15,8 @@ async function scrapeGitHub(url: string): Promise<ScrapedContent> {
 
   const apiBase = `https://api.github.com/repos/${owner}/${repo}`;
   const headers: Record<string, string> = { 'User-Agent': 'TopicAdvisor/1.0' };
+  const { githubToken } = getSettings();
+  if (githubToken) headers['Authorization'] = `Bearer ${githubToken}`;
 
   const [repoResp, readmeResp] = await Promise.all([
     fetch(apiBase, { headers, signal: AbortSignal.timeout(15_000) }),

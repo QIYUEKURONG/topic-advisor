@@ -145,6 +145,7 @@ export interface AppSettings {
   aiProvider: AIProviderConfig;
   imageProvider: ImageProviderConfig;
   rewritePrompt: string;
+  githubToken?: string;
   deepseekApiKey?: string;
   deepseekBaseUrl?: string;
 }
