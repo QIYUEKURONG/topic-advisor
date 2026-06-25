@@ -25,7 +25,7 @@ export async function shareRoutes(app: FastifyInstance) {
   });
 
   app.get<{
-    Querystring: { url: string; enableComics?: string; comicStyle?: string };
+    Querystring: { url: string; enableComics?: string; comicStyle?: string; articleStyle?: string };
   }>('/api/shares/generate', {
     schema: {
       querystring: {
@@ -35,11 +35,12 @@ export async function shareRoutes(app: FastifyInstance) {
           url: { type: 'string' },
           enableComics: { type: 'string' },
           comicStyle: { type: 'string' },
+          articleStyle: { type: 'string' },
         },
       },
     },
   }, async (req, reply) => {
-    const { url, enableComics, comicStyle } = req.query;
+    const { url, enableComics, comicStyle, articleStyle } = req.query;
     const comics = enableComics === 'true';
 
     reply.raw.writeHead(200, {
@@ -54,7 +55,7 @@ export async function shareRoutes(app: FastifyInstance) {
     };
 
     try {
-      const share = await generateShare(url, comics, comicStyle || 'cute', (phase, detail, progress, total) => {
+      const share = await generateShare(url, comics, comicStyle || 'cute', articleStyle || 'popular', (phase, detail, progress, total) => {
         send('progress', { phase, detail, progress, total });
       });
       send('complete', { shareId: share.id });

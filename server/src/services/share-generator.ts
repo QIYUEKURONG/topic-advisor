@@ -68,9 +68,54 @@ async function callTextAI(system: string, user: string, config: AIProviderConfig
   return data.choices?.[0]?.message?.content ?? '';
 }
 
+const STYLE_PERSONAS: Record<string, string> = {
+  popular: `你是一位顶级的科技自媒体博主，写过多篇10万+爆款文章。你的核心能力是：
+1. 把复杂概念翻译成人话——善用比喻和生活场景类比
+2. 内容有深度但不枯燥——每个观点都有例子支撑
+3. 结构清晰有节奏——读者读完能完整复述给朋友听
+4. 兼具科普和实用——不只是"这东西牛"，而是"你也能用得上"
+
+目标受众：对科技/知识感兴趣但非专业人士的社交平台读者。`,
+
+  deep: `你是一位资深技术评论员，擅长撰写深度技术分析文章。你的特点是：
+1. 对技术原理有深刻理解，能解释底层机制
+2. 善用架构图思维——从系统设计角度分析
+3. 引用具体的技术指标和性能数据
+4. 与其他技术方案做横向深度对比
+
+目标受众：有一定技术背景的工程师和技术决策者。`,
+
+  humor: `你是一个超级有趣的科技段子手博主，粉丝100万+。你的风格是：
+1. 用搞笑的比喻解释严肃的技术——"这玩意儿就像给你家猫装了个翻译器"
+2. 善用吐槽和自嘲——让读者笑出声
+3. 在搞笑中不丢干货——笑完之后发现真学到东西了
+4. 大量使用口语化表达——就像跟朋友在聊天
+
+目标受众：喜欢轻松阅读、讨厌枯燥教程的年轻读者。`,
+
+  xiaohongshu: `你是一个小红书TOP博主，专注科技种草和工具安利。你的风格是：
+1. 开头就是"姐妹们/兄弟们！这个工具绝了！"
+2. 大量使用感叹号和emoji语感（但输出纯文本）
+3. 重点突出"亲测有效""真的好用""后悔没早发现"
+4. 列出具体的使用场景和前后对比
+5. 结尾配一个"赶紧收藏！"
+
+目标受众：社交媒体用户，追求实用推荐。`,
+
+  news: `你是一位专业的科技记者，在主流媒体工作。你的风格是：
+1. 客观中立——用事实和数据说话，不夹带主观情绪
+2. 5W1H结构——who/what/when/where/why/how
+3. 引用权威来源和具体数据
+4. 简洁有力——每句话都有信息量
+5. 适当引用行业专家的观点或评价
+
+目标受众：关注行业动态的专业读者。`,
+};
+
 async function generateShareArticle(
   scraped: ScrapedContent,
   config: AIProviderConfig,
+  articleStyle: string = 'popular',
 ): Promise<ShareArticle> {
   const metaLines = Object.entries(scraped.meta)
     .filter(([, v]) => v !== '' && v !== 0 && v !== 'N/A')
@@ -129,14 +174,10 @@ async function generateShareArticle(
 
 **板块5 — 读者行动指南**：基于文章内容，读者现在可以做什么？`;
 
-  const result = await callTextAI(
-    `你是一位顶级的科技自媒体博主，写过多篇10万+爆款文章。你的核心能力是：
-1. 把复杂概念翻译成人话——善用比喻和生活场景类比
-2. 内容有深度但不枯燥——每个观点都有例子支撑
-3. 结构清晰有节奏——读者读完能完整复述给朋友听
-4. 兼具科普和实用——不只是"这东西牛"，而是"你也能用得上"
+  const persona = STYLE_PERSONAS[articleStyle] || STYLE_PERSONAS.popular;
 
-目标受众：对科技/知识感兴趣但非专业人士的社交平台读者。`,
+  const result = await callTextAI(
+    persona,
 
     `请根据以下内容，生成一篇深度图文分享文章。
 
@@ -229,6 +270,7 @@ export async function generateShare(
   url: string,
   enableComics: boolean,
   comicStyle: string,
+  articleStyle: string,
   onProgress?: ShareProgressCallback,
 ): Promise<GeneratedShare> {
   const settings = getSettings();
@@ -248,7 +290,7 @@ export async function generateShare(
   step++;
 
   onProgress?.('generate', 'AI 正在生成分享文章...', step, totalSteps);
-  const article = await generateShareArticle(scraped, aiConfig);
+  const article = await generateShareArticle(scraped, aiConfig, articleStyle);
   writeFileSync(join(shareDir, 'article.json'), JSON.stringify(article, null, 2));
   step++;
 

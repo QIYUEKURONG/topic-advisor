@@ -410,12 +410,14 @@ export function createShareSSE(
   url: string,
   enableComics: boolean,
   comicStyle: ComicStyle,
+  articleStyle: string,
   onEvent: (event: { type: string; data: any }) => void,
 ): EventSource {
   const params = new URLSearchParams({
     url,
     enableComics: String(enableComics),
     comicStyle,
+    articleStyle,
   });
   const es = new EventSource(`${BASE}/shares/generate?${params}`);
   let finished = false;

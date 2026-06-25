@@ -12,8 +12,19 @@ const PHASE_LABELS: Record<string, string> = {
   done: '完成',
 };
 
+const ARTICLE_STYLES = [
+  { id: 'popular', label: '科普通俗', emoji: '📖', desc: '像给朋友科普一样，通俗易懂' },
+  { id: 'deep', label: '技术深度', emoji: '🔬', desc: '深入原理，适合技术读者' },
+  { id: 'humor', label: '轻松幽默', emoji: '😄', desc: '段子手风格，让人笑着学到知识' },
+  { id: 'xiaohongshu', label: '小红书种草', emoji: '📕', desc: '种草安利风，适合社交媒体' },
+  { id: 'news', label: '新闻快报', emoji: '📰', desc: '客观简洁的新闻报道风格' },
+] as const;
+
+type ArticleStyle = (typeof ARTICLE_STYLES)[number]['id'];
+
 export default function ShareGenerator() {
   const [url, setUrl] = useState('');
+  const [articleStyle, setArticleStyle] = useState<ArticleStyle>('popular');
   const [enableComics, setEnableComics] = useState(true);
   const [comicStyle, setComicStyle] = useState<ComicStyle>('cute');
   const [generating, setGenerating] = useState(false);
@@ -41,7 +52,7 @@ export default function ShareGenerator() {
     setProgress({ phase: 'scrape', detail: '准备中...', value: 0, total: 2 });
 
     esRef.current?.close();
-    esRef.current = createShareSSE(url.trim(), enableComics, comicStyle, (evt) => {
+    esRef.current = createShareSSE(url.trim(), enableComics, comicStyle, articleStyle, (evt) => {
       if (evt.type === 'progress') {
         setProgress({
           phase: evt.data.phase,
@@ -149,6 +160,29 @@ export default function ShareGenerator() {
           >
             {generating ? '生成中...' : '开始生成'}
           </button>
+        </div>
+
+        {/* Article Style */}
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">文章风格</label>
+          <div className="flex flex-wrap gap-2">
+            {ARTICLE_STYLES.map(s => (
+              <button
+                key={s.id}
+                onClick={() => setArticleStyle(s.id)}
+                disabled={generating}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border-2 text-sm font-medium transition-all disabled:opacity-50 ${
+                  articleStyle === s.id
+                    ? 'border-brand-500 bg-brand-50 text-brand-700'
+                    : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                }`}
+                title={s.desc}
+              >
+                <span>{s.emoji}</span>
+                <span>{s.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Options */}
