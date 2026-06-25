@@ -23,6 +23,8 @@ export default function ShareGenerator() {
   const [linkedComic, setLinkedComic] = useState<GeneratedComic | null>(null);
   const [history, setHistory] = useState<GeneratedShare[]>([]);
   const [copyTip, setCopyTip] = useState('');
+  const [exportTip, setExportTip] = useState('');
+  const [exporting, setExporting] = useState(false);
   const esRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
@@ -101,6 +103,21 @@ export default function ShareGenerator() {
       setCopyTip('已复制到剪贴板');
       setTimeout(() => setCopyTip(''), 2000);
     });
+  }
+
+  async function handleExport() {
+    if (!share || exporting) return;
+    setExporting(true);
+    setExportTip('');
+    try {
+      const res = await api.exportShare(share.id);
+      setExportTip(`已导出到: ${res.exportDir}`);
+      setTimeout(() => setExportTip(''), 5000);
+    } catch (err: any) {
+      setExportTip(`导出失败: ${err.message}`);
+    } finally {
+      setExporting(false);
+    }
   }
 
   const pct = progress.total > 0 ? Math.round((progress.value / progress.total) * 100) : 0;
@@ -195,13 +212,29 @@ export default function ShareGenerator() {
           <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold">{share.article.title}</h3>
-              <button
-                onClick={copyArticleText}
-                className="text-sm text-brand-500 hover:text-brand-600 font-medium"
-              >
-                {copyTip || '复制全文'}
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleExport}
+                  disabled={exporting}
+                  className="text-sm text-green-600 hover:text-green-700 font-medium disabled:opacity-50"
+                >
+                  {exporting ? '导出中...' : '导出 MD'}
+                </button>
+                <button
+                  onClick={copyArticleText}
+                  className="text-sm text-brand-500 hover:text-brand-600 font-medium"
+                >
+                  {copyTip || '复制全文'}
+                </button>
+              </div>
             </div>
+            {exportTip && (
+              <div className={`mb-3 p-2.5 rounded-lg text-xs ${
+                exportTip.startsWith('已导出') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+              }`}>
+                {exportTip}
+              </div>
+            )}
 
             <p className="text-gray-600 italic mb-4 text-sm border-l-4 border-brand-300 pl-3">
               {share.article.hook}

@@ -313,6 +313,9 @@ export const api = {
   listShares: () => request<GeneratedShare[]>('/shares'),
 
   getShare: (id: string) => request<GeneratedShare>(`/shares/${id}`),
+
+  exportShare: (id: string) =>
+    request<{ exportDir: string }>(`/shares/${id}/export`, { method: 'POST' }),
 };
 
 // ── Share Generator types ──

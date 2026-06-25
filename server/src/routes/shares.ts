@@ -1,10 +1,21 @@
 import type { FastifyInstance } from 'fastify';
-import { generateShare, listShares, getShare } from '../services/share-generator.js';
+import { generateShare, listShares, getShare, exportShare } from '../services/share-generator.js';
 
 export async function shareRoutes(app: FastifyInstance) {
 
   app.get('/api/shares', async () => {
     return listShares();
+  });
+
+  app.post<{ Params: { id: string } }>('/api/shares/:id/export', async (req, reply) => {
+    const share = getShare(req.params.id);
+    if (!share) return reply.status(404).send({ error: 'Share not found' });
+    try {
+      const exportDir = exportShare(share);
+      return { exportDir };
+    } catch (err) {
+      return reply.status(500).send({ error: String(err) });
+    }
   });
 
   app.get<{ Params: { id: string } }>('/api/shares/:id', async (req, reply) => {
