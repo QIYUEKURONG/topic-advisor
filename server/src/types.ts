@@ -136,7 +136,8 @@ export const IMAGE_PROVIDER_DEFAULTS: Record<ImageProvider, { baseUrl: string; m
 
 export type ComicStyle =
   | 'warm' | 'cute' | 'business' | 'retro' | 'simple'
-  | 'watercolor' | 'pixel' | 'ukiyoe' | 'poster' | 'sketch' | 'anime';
+  | 'watercolor' | 'pixel' | 'ukiyoe' | 'poster' | 'sketch' | 'anime'
+  | 'aitech' | 'scifi';
 
 export const COMIC_STYLES: Record<ComicStyle, { label: string; description: string; promptHint: string }> = {
   warm: { label: '温馨日常', description: '暖色调家庭风格', promptHint: 'warm family illustration, soft colors, cozy home scene, hand-drawn style' },
@@ -150,6 +151,8 @@ export const COMIC_STYLES: Record<ComicStyle, { label: string; description: stri
   poster: { label: '海报风', description: '大字报宣传画', promptHint: 'bold propaganda poster style, vivid colors, strong contrast, graphic design illustration' },
   sketch: { label: '铅笔素描', description: '手绘铅笔线条', promptHint: 'pencil sketch style, hand drawn graphite, detailed shading, realistic pencil drawing' },
   anime: { label: '日系动漫', description: '日本动漫画风', promptHint: 'Japanese anime illustration style, detailed anime characters, vivid colors, anime art' },
+  aitech: { label: 'AI工具风', description: 'AI科技产品插画', promptHint: 'modern AI technology illustration, clean UI mockup style, gradient colors, robot and human interaction, digital workspace, tech product showcase, flat design with subtle 3D elements' },
+  scifi: { label: '未来科技', description: '赛博朋克科幻风', promptHint: 'futuristic sci-fi illustration, cyberpunk neon glow, holographic interface, dark background with bright accent colors, high-tech digital environment, circuit board patterns' },
 };
 
 export type TextLayout = 'bar' | 'floating' | 'card' | 'minimal';

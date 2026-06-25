@@ -35,7 +35,8 @@ export const IMAGE_PROVIDER_OPTIONS: Array<{ id: ImageProvider; label: string; b
 ];
 
 export type ComicStyle = 'warm' | 'cute' | 'business' | 'retro' | 'simple'
-  | 'watercolor' | 'pixel' | 'ukiyoe' | 'poster' | 'sketch' | 'anime';
+  | 'watercolor' | 'pixel' | 'ukiyoe' | 'poster' | 'sketch' | 'anime'
+  | 'aitech' | 'scifi';
 
 export const COMIC_STYLE_OPTIONS: Array<{ id: ComicStyle; label: string; description: string; emoji: string }> = [
   { id: 'warm', label: '温馨日常', description: '暖色调家庭风格', emoji: '🏠' },
@@ -49,6 +50,8 @@ export const COMIC_STYLE_OPTIONS: Array<{ id: ComicStyle; label: string; descrip
   { id: 'poster', label: '海报风', description: '大字报宣传画', emoji: '📢' },
   { id: 'sketch', label: '铅笔素描', description: '手绘铅笔线条', emoji: '✎' },
   { id: 'anime', label: '日系动漫', description: '日本动漫画风', emoji: '🌸' },
+  { id: 'aitech', label: 'AI工具风', description: 'AI科技产品插画', emoji: '🤖' },
+  { id: 'scifi', label: '未来科技', description: '赛博朋克科幻风', emoji: '🚀' },
 ];
 
 export type TextLayout = 'bar' | 'floating' | 'card' | 'minimal';
