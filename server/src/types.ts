@@ -175,15 +175,21 @@ export const FONT_STYLES: Record<FontStyle, { label: string; fontFamily: string;
   elegant: { label: '宋体', fontFamily: "'STSong', 'Songti SC', 'PingFang SC', serif", description: '典雅传统' },
 };
 
-export type FontColor = 'white' | 'yellow' | 'pink' | 'cyan' | 'orange' | 'lime';
+export type FontColor = 'white' | 'yellow' | 'pink' | 'cyan' | 'orange' | 'lime' | 'gold' | 'lavender' | 'coral' | 'skyblue' | 'red' | 'black';
 
 export const FONT_COLORS: Record<FontColor, { label: string; hex: string }> = {
-  white:  { label: '白色', hex: '#FFFFFF' },
-  yellow: { label: '明黄', hex: '#FFD54F' },
-  pink:   { label: '粉色', hex: '#F48FB1' },
-  cyan:   { label: '薄荷', hex: '#80CBC4' },
-  orange: { label: '橙色', hex: '#FFB74D' },
-  lime:   { label: '草绿', hex: '#AED581' },
+  white:    { label: '白色', hex: '#FFFFFF' },
+  black:    { label: '黑色', hex: '#212121' },
+  yellow:   { label: '明黄', hex: '#FFD54F' },
+  gold:     { label: '金色', hex: '#FFC107' },
+  pink:     { label: '粉色', hex: '#F48FB1' },
+  coral:    { label: '珊瑚', hex: '#FF7043' },
+  red:      { label: '红色', hex: '#EF5350' },
+  orange:   { label: '橙色', hex: '#FFB74D' },
+  cyan:     { label: '薄荷', hex: '#80CBC4' },
+  skyblue:  { label: '天蓝', hex: '#4FC3F7' },
+  lavender: { label: '薰衣草', hex: '#CE93D8' },
+  lime:     { label: '草绿', hex: '#AED581' },
 };
 
 export type ImageMode = 'comparison' | 'normal';
@@ -198,6 +204,9 @@ export interface StickerRequest {
   style: ComicStyle;
   fontStyle: FontStyle;
   fontColor: FontColor;
+  fontScale: number;
+  leftColor: FontColor;
+  rightColor: FontColor;
   textLayout: TextLayout;
   imageCount: number;
   imageConfigs: ImageConfig[];
@@ -225,6 +234,7 @@ export interface ComicScript {
   topic: string;
   overallTitle: string;
   characterDescription: string;
+  postCaption: string;
   images: ScriptImage[];
 }
 
@@ -261,6 +271,20 @@ export interface Settings {
   deepseekApiKey: string;
   /** @deprecated use aiProvider.baseUrl */
   deepseekBaseUrl: string;
+}
+
+// ── GitHub Trending ──
+
+export interface TrendingRepo {
+  rank: number;
+  name: string;
+  fullName: string;
+  url: string;
+  description: string;
+  language: string;
+  stars: number;
+  forks: number;
+  todayStars: number;
 }
 
 // ── Share Generator ──

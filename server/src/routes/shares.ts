@@ -1,7 +1,13 @@
 import type { FastifyInstance } from 'fastify';
 import { generateShare, listShares, getShare, exportShare } from '../services/share-generator.js';
+import { scrapeGitHubTrending } from '../services/content-scraper.js';
 
 export async function shareRoutes(app: FastifyInstance) {
+
+  app.get<{ Querystring: { since?: string } }>('/api/shares/github-trending', async (req) => {
+    const since = (req.query.since || 'daily') as 'daily' | 'weekly' | 'monthly';
+    return scrapeGitHubTrending(since);
+  });
 
   app.get('/api/shares', async () => {
     return listShares();

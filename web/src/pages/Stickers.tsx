@@ -38,6 +38,9 @@ export default function Stickers() {
   const [style, setStyle] = useState<ComicStyle>('warm');
   const [fontStyle, setFontStyle] = useState<FontStyle>('default');
   const [fontColor, setFontColor] = useState<FontColor>('white');
+  const [fontScale, setFontScale] = useState(1.0);
+  const [leftColor, setLeftColor] = useState<FontColor>('red');
+  const [rightColor, setRightColor] = useState<FontColor>('lime');
   const [textLayout, setTextLayout] = useState<TextLayout>('bar');
   const [imageCount, setImageCount] = useState(3);
   const [imageConfigs, setImageConfigs] = useState<ImageConfig[]>([
@@ -82,7 +85,7 @@ export default function Stickers() {
     setError(null);
     setProgress({ phase: 'init', detail: '准备中...', progress: 0, total: 2 + imageCount * 2 + 1 });
 
-    createStickerSSE(topic.trim(), style, fontStyle, fontColor, textLayout, imageConfigs, (event) => {
+    createStickerSSE(topic.trim(), style, fontStyle, fontColor, fontScale, leftColor, rightColor, textLayout, imageConfigs, (event) => {
       if (event.type === 'progress') {
         setProgress(event.data);
       } else if (event.type === 'complete') {
@@ -256,6 +259,88 @@ export default function Stickers() {
               </div>
             </div>
 
+            {/* Left/Right Comparison Colors */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">对比模式颜色</label>
+              <div className="mb-3">
+                <div className="text-xs text-gray-500 mb-1.5">✗ 左侧颜色</div>
+                <div className="flex gap-1.5 flex-wrap">
+                  {FONT_COLOR_OPTIONS.map((fc) => (
+                    <button
+                      key={fc.id}
+                      onClick={() => setLeftColor(fc.id)}
+                      disabled={generating}
+                      className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-xs transition-all ${
+                        leftColor === fc.id
+                          ? 'border-red-400 bg-red-50 ring-1 ring-red-400'
+                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className="inline-block w-3 h-3 rounded-full border border-gray-300" style={{ backgroundColor: fc.hex }} />
+                      <span className="text-gray-700">{fc.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500 mb-1.5">✓ 右侧颜色</div>
+                <div className="flex gap-1.5 flex-wrap">
+                  {FONT_COLOR_OPTIONS.map((fc) => (
+                    <button
+                      key={fc.id}
+                      onClick={() => setRightColor(fc.id)}
+                      disabled={generating}
+                      className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-xs transition-all ${
+                        rightColor === fc.id
+                          ? 'border-green-400 bg-green-50 ring-1 ring-green-400'
+                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className="inline-block w-3 h-3 rounded-full border border-gray-300" style={{ backgroundColor: fc.hex }} />
+                      <span className="text-gray-700">{fc.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Font Scale */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                字体大小 <span className="text-violet-600 font-mono">{fontScale.toFixed(1)}</span>
+              </label>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-gray-400">0.3</span>
+                <input
+                  type="range"
+                  min="0.3"
+                  max="3.0"
+                  step="0.1"
+                  value={fontScale}
+                  onChange={(e) => setFontScale(parseFloat(e.target.value))}
+                  disabled={generating}
+                  className="flex-1 accent-violet-500"
+                />
+                <span className="text-xs text-gray-400">3.0</span>
+              </div>
+              <div className="flex justify-between mt-2">
+                {[0.5, 0.8, 1.0, 1.3, 1.5, 2.0].map((v) => (
+                  <button
+                    key={v}
+                    onClick={() => setFontScale(v)}
+                    disabled={generating}
+                    className={`px-2 py-0.5 rounded text-xs transition-all ${
+                      fontScale === v
+                        ? 'bg-violet-100 text-violet-700 font-semibold'
+                        : 'text-gray-500 hover:bg-gray-100'
+                    }`}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Text Layout */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
               <label className="block text-sm font-semibold text-gray-700 mb-3">文字排版</label>
@@ -393,7 +478,7 @@ export default function Stickers() {
                             setRecomposing(true);
                             setTextLayout(l.id);
                             try {
-                              const updated = await api.recomposeComic(selectedComic.id, fontStyle, l.id, fontColor);
+                              const updated = await api.recomposeComic(selectedComic.id, fontStyle, l.id, fontColor, fontScale, leftColor, rightColor);
                               setSelectedComic(updated);
                               loadComics();
                             } catch (err: any) { setError(err.message); }
@@ -420,7 +505,7 @@ export default function Stickers() {
                             setRecomposing(true);
                             setFontStyle(f.id);
                             try {
-                              const updated = await api.recomposeComic(selectedComic.id, f.id, textLayout, fontColor);
+                              const updated = await api.recomposeComic(selectedComic.id, f.id, textLayout, fontColor, fontScale, leftColor, rightColor);
                               setSelectedComic(updated);
                               loadComics();
                             } catch (err: any) { setError(err.message); }
@@ -447,7 +532,7 @@ export default function Stickers() {
                             setRecomposing(true);
                             setFontColor(fc.id);
                             try {
-                              const updated = await api.recomposeComic(selectedComic.id, fontStyle, textLayout, fc.id);
+                              const updated = await api.recomposeComic(selectedComic.id, fontStyle, textLayout, fc.id, fontScale, leftColor, rightColor);
                               setSelectedComic(updated);
                               loadComics();
                             } catch (err: any) { setError(err.message); }
@@ -459,6 +544,85 @@ export default function Stickers() {
                         >
                           <span className="w-3 h-3 rounded-full border border-gray-300" style={{ backgroundColor: fc.hex }} />
                           <span className="text-gray-700">{fc.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">字体大小 <span className="text-violet-600 font-mono">{fontScale.toFixed(1)}</span></div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="range"
+                        min="0.3"
+                        max="3.0"
+                        step="0.1"
+                        value={fontScale}
+                        disabled={recomposing}
+                        onChange={(e) => setFontScale(parseFloat(e.target.value))}
+                        onMouseUp={async () => {
+                          if (!selectedComic || recomposing) return;
+                          setRecomposing(true);
+                          try {
+                            const updated = await api.recomposeComic(selectedComic.id, fontStyle, textLayout, fontColor, fontScale, leftColor, rightColor);
+                            setSelectedComic(updated);
+                            loadComics();
+                          } catch (err: any) { setError(err.message); }
+                          finally { setRecomposing(false); }
+                        }}
+                        className="flex-1 accent-violet-500"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">✗ 左侧颜色</div>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {FONT_COLOR_OPTIONS.map((fc) => (
+                        <button
+                          key={fc.id}
+                          disabled={recomposing}
+                          onClick={async () => {
+                            if (!selectedComic || recomposing) return;
+                            setRecomposing(true);
+                            setLeftColor(fc.id);
+                            try {
+                              const updated = await api.recomposeComic(selectedComic.id, fontStyle, textLayout, fontColor, fontScale, fc.id, rightColor);
+                              setSelectedComic(updated);
+                              loadComics();
+                            } catch (err: any) { setError(err.message); }
+                            finally { setRecomposing(false); }
+                          }}
+                          className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs border transition-colors disabled:opacity-50 ${
+                            leftColor === fc.id ? 'bg-red-50 border-red-400' : 'bg-white border-gray-300 hover:bg-gray-100'
+                          }`}
+                        >
+                          <span className="w-3 h-3 rounded-full border border-gray-300" style={{ backgroundColor: fc.hex }} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">✓ 右侧颜色</div>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {FONT_COLOR_OPTIONS.map((fc) => (
+                        <button
+                          key={fc.id}
+                          disabled={recomposing}
+                          onClick={async () => {
+                            if (!selectedComic || recomposing) return;
+                            setRecomposing(true);
+                            setRightColor(fc.id);
+                            try {
+                              const updated = await api.recomposeComic(selectedComic.id, fontStyle, textLayout, fontColor, fontScale, leftColor, fc.id);
+                              setSelectedComic(updated);
+                              loadComics();
+                            } catch (err: any) { setError(err.message); }
+                            finally { setRecomposing(false); }
+                          }}
+                          className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs border transition-colors disabled:opacity-50 ${
+                            rightColor === fc.id ? 'bg-green-50 border-green-400' : 'bg-white border-gray-300 hover:bg-gray-100'
+                          }`}
+                        >
+                          <span className="w-3 h-3 rounded-full border border-gray-300" style={{ backgroundColor: fc.hex }} />
                         </button>
                       ))}
                     </div>
@@ -500,6 +664,24 @@ export default function Stickers() {
                         </a>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {/* Post Caption */}
+                {selectedComic.script.postCaption && (
+                  <div className="mt-4 p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-sm font-semibold text-orange-700">发图文案</div>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(selectedComic.script.postCaption);
+                        }}
+                        className="text-xs px-2 py-1 rounded-lg bg-orange-100 text-orange-600 hover:bg-orange-200 transition-colors"
+                      >
+                        复制文案
+                      </button>
+                    </div>
+                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{selectedComic.script.postCaption}</p>
                   </div>
                 )}
 

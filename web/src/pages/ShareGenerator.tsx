@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   api, createShareSSE,
-  type GeneratedShare, type ComicStyle, type GeneratedComic,
+  type GeneratedShare, type ComicStyle, type GeneratedComic, type TrendingRepo,
   COMIC_STYLE_OPTIONS,
 } from '../lib/api';
 
@@ -48,12 +48,29 @@ export default function ShareGenerator() {
   const [exporting, setExporting] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [trendingRepos, setTrendingRepos] = useState<TrendingRepo[]>([]);
+  const [trendingSince, setTrendingSince] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+  const [trendingLoading, setTrendingLoading] = useState(false);
+  const [showTrending, setShowTrending] = useState(false);
   const esRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
     api.listShares().then(setHistory).catch(() => {});
     return () => { esRef.current?.close(); };
   }, []);
+
+  const fetchTrending = useCallback(async (since: 'daily' | 'weekly' | 'monthly' = trendingSince) => {
+    setTrendingLoading(true);
+    try {
+      const repos = await api.getGitHubTrending(since);
+      setTrendingRepos(repos);
+      setShowTrending(true);
+    } catch (err: any) {
+      setError(err.message || '获取热点失败');
+    } finally {
+      setTrendingLoading(false);
+    }
+  }, [trendingSince]);
 
   function handleGenerate() {
     if (!url.trim() || generating) return;
@@ -119,6 +136,7 @@ export default function ShareGenerator() {
       ]),
       article.conclusion,
       '',
+      ...(share.url ? [`项目地址: ${share.url}`, ''] : []),
       article.tags.map(t => `#${t}`).join(' '),
     ].join('\n');
 
@@ -152,7 +170,9 @@ export default function ShareGenerator() {
     const plainText = [
       article.title, '', article.hook, '',
       ...article.sections.flatMap(s => [`## ${s.heading}`, '', s.body, '']),
-      article.conclusion, '', article.tags.map(t => `#${t}`).join(' '),
+      article.conclusion, '',
+      ...(share.url ? [`项目地址: ${share.url}`, ''] : []),
+      article.tags.map(t => `#${t}`).join(' '),
     ].join('\n');
 
     try {
@@ -167,7 +187,8 @@ export default function ShareGenerator() {
         return `<h3>${sec.heading}</h3><p>${bodyHtml}</p>${imgHtml}`;
       }).join('');
 
-      const fullHtml = `<h2>${article.title}</h2><blockquote>${article.hook}</blockquote>${sectionsHtml}<p><strong>${article.conclusion}</strong></p><p>${article.tags.map(t => `#${t}`).join(' ')}</p>`;
+      const urlHtml = share.url ? `<p>项目地址: <a href="${share.url}">${share.url}</a></p>` : '';
+      const fullHtml = `<h2>${article.title}</h2><blockquote>${article.hook}</blockquote>${sectionsHtml}<p><strong>${article.conclusion}</strong></p>${urlHtml}<p>${article.tags.map(t => `#${t}`).join(' ')}</p>`;
       const htmlBlob = new Blob([fullHtml], { type: 'text/html' });
       const textBlob = new Blob([plainText], { type: 'text/plain' });
       await navigator.clipboard.write([
@@ -263,6 +284,77 @@ export default function ShareGenerator() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* ── GitHub Trending ── */}
+      <div className="bg-white rounded-xl shadow-sm border p-5 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+            <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            GitHub 热点项目
+          </h3>
+          <div className="flex items-center gap-2">
+            <select
+              value={trendingSince}
+              onChange={e => {
+                const v = e.target.value as 'daily' | 'weekly' | 'monthly';
+                setTrendingSince(v);
+                if (showTrending) fetchTrending(v);
+              }}
+              className="border rounded-lg px-2 py-1 text-xs"
+            >
+              <option value="daily">今日</option>
+              <option value="weekly">本周</option>
+              <option value="monthly">本月</option>
+            </select>
+            <button
+              onClick={() => fetchTrending()}
+              disabled={trendingLoading}
+              className="px-3 py-1 bg-gray-800 text-white rounded-lg text-xs font-medium disabled:opacity-50 hover:bg-gray-700 transition-colors"
+            >
+              {trendingLoading ? '加载中...' : showTrending ? '刷新' : '获取热点'}
+            </button>
+          </div>
+        </div>
+
+        {showTrending && trendingRepos.length > 0 && (
+          <div className="max-h-[400px] overflow-y-auto space-y-1">
+            {trendingRepos.map(repo => (
+              <div
+                key={repo.fullName}
+                className="flex items-start gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group"
+                onClick={() => {
+                  setUrl(repo.url);
+                }}
+              >
+                <span className="text-xs text-gray-400 font-mono w-5 text-right flex-shrink-0 mt-0.5">
+                  {repo.rank}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-blue-600 group-hover:underline truncate">
+                      {repo.fullName}
+                    </span>
+                    {repo.language && (
+                      <span className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded flex-shrink-0">
+                        {repo.language}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 truncate mt-0.5">{repo.description || '暂无描述'}</p>
+                </div>
+                <div className="flex items-center gap-3 text-xs text-gray-400 flex-shrink-0 mt-0.5">
+                  <span title="总星标">&#9733; {repo.stars >= 1000 ? `${(repo.stars / 1000).toFixed(1)}k` : repo.stars}</span>
+                  <span className="text-orange-500 font-medium" title="今日新增">+{repo.todayStars}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {showTrending && trendingRepos.length === 0 && !trendingLoading && (
+          <p className="text-sm text-gray-400 text-center py-4">暂无数据</p>
+        )}
       </div>
 
       {/* ── Progress ── */}
@@ -403,6 +495,20 @@ export default function ShareGenerator() {
             <p className="text-gray-800 font-medium mt-4 pt-4 border-t">
               {share.article.conclusion}
             </p>
+
+            {share.url && (
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <span className="text-xs text-gray-500 block mb-1">项目地址</span>
+                <a
+                  href={share.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 hover:underline break-all"
+                >
+                  {share.url}
+                </a>
+              </div>
+            )}
 
             <div className="flex flex-wrap gap-2 mt-4">
               {share.article.tags.map((tag, i) => (

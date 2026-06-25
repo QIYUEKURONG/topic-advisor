@@ -39,11 +39,11 @@ export async function stickerRoutes(app: FastifyInstance) {
     },
   );
 
-  app.post<{ Params: { id: string }; Body: { fontStyle?: FontStyle; fontColor?: FontColor; textLayout?: TextLayout; style?: ComicStyle } }>(
+  app.post<{ Params: { id: string }; Body: { fontStyle?: FontStyle; fontColor?: FontColor; fontScale?: number; leftColor?: FontColor; rightColor?: FontColor; textLayout?: TextLayout; style?: ComicStyle } }>(
     '/api/stickers/:id/recompose',
     async (req, reply) => {
-      const { fontStyle = 'default', fontColor = 'white', textLayout = 'bar', style } = (req.body || {}) as { fontStyle?: FontStyle; fontColor?: FontColor; textLayout?: TextLayout; style?: ComicStyle };
-      const comic = await recomposeComic(req.params.id, fontStyle, textLayout, fontColor, style);
+      const { fontStyle = 'default', fontColor = 'white', fontScale = 1.0, leftColor = 'red', rightColor = 'lime', textLayout = 'bar', style } = (req.body || {}) as { fontStyle?: FontStyle; fontColor?: FontColor; fontScale?: number; leftColor?: FontColor; rightColor?: FontColor; textLayout?: TextLayout; style?: ComicStyle };
+      const comic = await recomposeComic(req.params.id, fontStyle, textLayout, fontColor, fontScale, leftColor, rightColor, style);
       if (!comic) return reply.status(404).send({ error: '漫画未找到' });
       return comic;
     },
@@ -67,12 +67,16 @@ export async function stickerRoutes(app: FastifyInstance) {
       style?: ComicStyle;
       fontStyle?: FontStyle;
       fontColor?: FontColor;
+      fontScale?: string;
+      leftColor?: FontColor;
+      rightColor?: FontColor;
       textLayout?: TextLayout;
       imageCount?: string;
       configs?: string;
     };
   }>('/api/stickers/generate', async (req, reply) => {
-    const { topic, style = 'warm', fontStyle = 'default', fontColor = 'white', textLayout = 'bar', imageCount: countStr = '3', configs: configsStr } = req.query || {};
+    const { topic, style = 'warm', fontStyle = 'default', fontColor = 'white', fontScale: fontScaleStr = '1', leftColor = 'red', rightColor = 'lime', textLayout = 'bar', imageCount: countStr = '3', configs: configsStr } = req.query || {};
+    const fontScale = Math.max(0.3, Math.min(3.0, parseFloat(fontScaleStr) || 1.0));
 
     if (!topic || typeof topic !== 'string' || !topic.trim()) {
       return reply.status(400).send({ error: '请提供漫画主题' });
@@ -97,6 +101,9 @@ export async function stickerRoutes(app: FastifyInstance) {
       style: style as ComicStyle,
       fontStyle: fontStyle as FontStyle,
       fontColor: fontColor as FontColor,
+      fontScale,
+      leftColor: (leftColor || 'red') as FontColor,
+      rightColor: (rightColor || 'lime') as FontColor,
       textLayout: textLayout as TextLayout,
       imageCount,
       imageConfigs,

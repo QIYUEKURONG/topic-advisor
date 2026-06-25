@@ -63,14 +63,21 @@ export const TEXT_LAYOUT_OPTIONS: Array<{ id: TextLayout; label: string; descrip
   { id: 'minimal', label: '极简底部', description: '仅底部一行' },
 ];
 
-export type FontColor = 'white' | 'yellow' | 'pink' | 'cyan' | 'orange' | 'lime';
+
+export type FontColor = 'white' | 'yellow' | 'pink' | 'cyan' | 'orange' | 'lime' | 'gold' | 'lavender' | 'coral' | 'skyblue' | 'red' | 'black';
 
 export const FONT_COLOR_OPTIONS: Array<{ id: FontColor; label: string; hex: string }> = [
   { id: 'white', label: '白色', hex: '#FFFFFF' },
+  { id: 'black', label: '黑色', hex: '#212121' },
   { id: 'yellow', label: '明黄', hex: '#FFD54F' },
+  { id: 'gold', label: '金色', hex: '#FFC107' },
   { id: 'pink', label: '粉色', hex: '#F48FB1' },
-  { id: 'cyan', label: '薄荷', hex: '#80CBC4' },
+  { id: 'coral', label: '珊瑚', hex: '#FF7043' },
+  { id: 'red', label: '红色', hex: '#EF5350' },
   { id: 'orange', label: '橙色', hex: '#FFB74D' },
+  { id: 'cyan', label: '薄荷', hex: '#80CBC4' },
+  { id: 'skyblue', label: '天蓝', hex: '#4FC3F7' },
+  { id: 'lavender', label: '薰衣草', hex: '#CE93D8' },
   { id: 'lime', label: '草绿', hex: '#AED581' },
 ];
 
@@ -114,6 +121,7 @@ export interface ComicScript {
   topic: string;
   overallTitle: string;
   characterDescription: string;
+  postCaption: string;
   images: ScriptImage[];
 }
 
@@ -302,10 +310,10 @@ export const api = {
   getComicImageUrl: (comicId: string, filename: string, version?: number) =>
     `${BASE}/stickers/${comicId}/images/${filename}${version ? `?v=${version}` : ''}`,
 
-  recomposeComic: (comicId: string, fontStyle: FontStyle, textLayout: TextLayout, fontColor: FontColor) =>
+  recomposeComic: (comicId: string, fontStyle: FontStyle, textLayout: TextLayout, fontColor: FontColor, fontScale: number = 1.0, leftColor: FontColor = 'red', rightColor: FontColor = 'lime') =>
     request<GeneratedComic>(`/stickers/${comicId}/recompose`, {
       method: 'POST',
-      body: JSON.stringify({ fontStyle, textLayout, fontColor }),
+      body: JSON.stringify({ fontStyle, textLayout, fontColor, fontScale, leftColor, rightColor }),
     }),
 
   getExportUrl: (comicId: string, layout: 'grid' | 'vertical' | 'horizontal' = 'grid') =>
@@ -314,6 +322,9 @@ export const api = {
   listShares: () => request<GeneratedShare[]>('/shares'),
 
   getShare: (id: string) => request<GeneratedShare>(`/shares/${id}`),
+
+  getGitHubTrending: (since: 'daily' | 'weekly' | 'monthly' = 'daily') =>
+    request<TrendingRepo[]>(`/shares/github-trending?since=${since}`),
 
   exportShare: (id: string, platform: string = 'markdown') =>
     request<{ exportDir: string }>(`/shares/${id}/export`, {
@@ -348,6 +359,18 @@ export interface ScrapedContent {
   meta: Record<string, string | number>;
 }
 
+export interface TrendingRepo {
+  rank: number;
+  name: string;
+  fullName: string;
+  url: string;
+  description: string;
+  language: string;
+  stars: number;
+  forks: number;
+  todayStars: number;
+}
+
 export interface GeneratedShare {
   id: string;
   url: string;
@@ -365,6 +388,9 @@ export function createStickerSSE(
   style: ComicStyle,
   fontStyle: FontStyle,
   fontColor: FontColor,
+  fontScale: number,
+  leftColor: FontColor,
+  rightColor: FontColor,
   textLayout: TextLayout,
   imageConfigs: ImageConfig[],
   onEvent: (event: { type: string; data: any }) => void,
@@ -374,6 +400,9 @@ export function createStickerSSE(
     style,
     fontStyle,
     fontColor,
+    fontScale: String(fontScale),
+    leftColor,
+    rightColor,
     textLayout,
     imageCount: String(imageConfigs.length),
     configs: JSON.stringify(imageConfigs),

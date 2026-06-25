@@ -123,6 +123,7 @@ ${configDesc}
 {
   "overallTitle": "整组贴图的总标题",
   "characterDescription": "统一的人物外貌描述（如：一位约25岁的年轻女性，扎马尾，穿白色T恤和牛仔裤）",
+  "postCaption": "发图文案（适合在社交媒体发布这组图片时配的文字，带emoji和话题标签，100-200字）",
   "images": [
     对比模式示例: ${comparisonExample},
     普通模式示例: ${normalExample}
@@ -136,7 +137,8 @@ ${configDesc}
 - 所有 title 要简短有力（2-8个字）
 - scene 描述要具体生动，方便AI生图
 - 每张图必须有 copyText 字段：解释这张图的含义和结论（15-25个字，让观众一看就懂）
-- 每张图必须有 quote 字段：一句幽默/深刻/鸡汤的短句（不超过15个字）`,
+- 每张图必须有 quote 字段：一句幽默/深刻/鸡汤的短句（不超过15个字）
+- postCaption 必须填写：这是发布这组图片时配的文案，要吸引人，带emoji，可以包含#话题标签#，语气亲切活泼`,
     config,
   );
 
@@ -182,6 +184,7 @@ ${configDesc}
     topic,
     overallTitle: parsed.overallTitle || topic,
     characterDescription: parsed.characterDescription || '',
+    postCaption: parsed.postCaption || '',
     images,
   };
 }
@@ -370,7 +373,7 @@ export async function generateComic(
   if (!aiConfig.apiKey) throw new Error('请先在设置中配置文本 AI 的 API Key');
   if (!imageConfig.apiKey) throw new Error('请先在设置中配置图片生成 API Key');
 
-  const { topic, style, fontStyle = 'default', fontColor = 'white', textLayout = 'bar', imageConfigs } = request;
+  const { topic, style, fontStyle = 'default', fontColor = 'white', fontScale = 1.0, leftColor = 'red', rightColor = 'lime', textLayout = 'bar', imageConfigs } = request;
   const count = imageConfigs.length;
 
   const comicId = nanoid(12);
@@ -404,7 +407,7 @@ export async function generateComic(
 
       onProgress?.('compose', `合成第 ${i + 1}/${count} 张文字...`, step, totalSteps);
       const finalPath = join(comicDir, `final-${i + 1}.png`);
-      await compositeTextOnImage(rawPath, finalPath, script.images[i], style, fontStyle, textLayout, fontColor);
+      await compositeTextOnImage(rawPath, finalPath, script.images[i], style, fontStyle, textLayout, fontColor, fontScale, leftColor, rightColor);
       finalImages.push(`final-${i + 1}.png`);
       step++;
     } catch (err) {
@@ -463,6 +466,9 @@ export async function recomposeComic(
   fontStyle: FontStyle,
   textLayout: TextLayout = 'bar',
   fontColor: FontColor = 'white',
+  fontScale: number = 1.0,
+  leftColor: FontColor = 'red',
+  rightColor: FontColor = 'lime',
   style?: ComicStyle,
 ): Promise<GeneratedComic | null> {
   const comic = getComic(comicId);
@@ -478,7 +484,7 @@ export async function recomposeComic(
     const finalFile = `final-${i + 1}.png`;
     const finalPath = join(comicDir, finalFile);
     const s = style || comic.style;
-    await compositeTextOnImage(rawPath, finalPath, comic.script.images[i], s, fontStyle, textLayout, fontColor);
+    await compositeTextOnImage(rawPath, finalPath, comic.script.images[i], s, fontStyle, textLayout, fontColor, fontScale, leftColor, rightColor);
     newFinals.push(finalFile);
   }
 

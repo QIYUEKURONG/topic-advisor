@@ -96,7 +96,9 @@ Generate custom comic stickers with AI-powered illustrations and text overlays.
 - **Flexible layouts**: 1-6 images per set, comparison or normal mode
 - **11 art styles**: Warm, Cute, Pixel, Watercolor, Anime, and more
 - **4 text layouts**: Bar, Floating, Card, Minimal
-- **6 font colors** + 6 font styles, switchable without regenerating
+- **12 font colors** + 6 font styles + numeric font scaling (0.3x–3.0x)
+- **Per-side colors**: Set different colors for left/right in comparison mode
+- **Auto-generated post caption**: AI creates social media caption alongside comic scripts
 - **Export options**: Individual download or combined grid/vertical/horizontal
 
 </td>
@@ -110,6 +112,34 @@ Connect to AI image generation APIs for automatic illustration creation.
 - **CogView** (Zhipu): CogView-4 model support
 - **Server-side text compositing**: Sharp + SVG overlay, no AI text rendering
 - **Raw + Final images**: View original AI art or text-composited version
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### 📤 Share Generator
+Input a GitHub repo or article URL — AI generates a polished article with illustrations.
+
+- **Multi-source support**: GitHub projects, academic papers, web articles
+- **13 structure templates**: Intro, Story, Q&A, Checklist, Comparison, Problem-Solution, Explorer, and more — randomly selected per generation for variety
+- **5 writing styles**: Popular, Deep Analysis, Humor, Xiaohongshu, News
+- **Anti-AI tone**: Prompts enforce natural, human-like writing with no cliché AI phrases
+- **GitHub Trending collector**: Fetch today's hottest 30 repos and generate articles with one click
+- **7 export formats**: Markdown, Toutiao, WeChat, Xiaohongshu, Zhihu, Douyin, Weibo
+- **Auto-appended source link**: Original URL included at end of article and all exports
+
+</td>
+<td width="50%">
+
+### ⚙️ Flexible AI Configuration
+Support multiple AI providers with seamless switching.
+
+- **Text AI**: DeepSeek / OpenAI / Claude / Moonshot / Qwen
+- **Image AI**: Seedream / DashScope / CogView
+- **Per-feature configuration**: Different AI for rewriting vs. comics
+- **API key management**: Secure local storage
+- **Streaming via SSE**: Real-time progress for all generation tasks
 
 </td>
 </tr>
@@ -242,8 +272,10 @@ topic-advisor/
 │   │   ├── services/       # Core services
 │   │   │   ├── task-runner.ts        # Crawl pipeline orchestrator
 │   │   │   ├── rewriter.ts           # AI rewriting engine
+│   │   │   ├── share-generator.ts    # Share article generator (13 templates)
 │   │   │   ├── sticker-generator.ts  # Comic sticker pipeline
 │   │   │   ├── image-composer.ts     # Sharp + SVG text overlay
+│   │   │   ├── content-scraper.ts    # URL scraper + GitHub Trending
 │   │   │   ├── scorer.ts             # Content scoring
 │   │   │   └── filter.ts             # Content filtering
 │   │   ├── routes/         # API routes
@@ -252,10 +284,11 @@ topic-advisor/
 ├── web/                    # Frontend UI
 │   ├── src/
 │   │   ├── pages/
-│   │   │   ├── Dashboard.tsx    # Crawl console
-│   │   │   ├── Candidates.tsx   # Content management
-│   │   │   ├── Stickers.tsx     # Comic sticker workshop
-│   │   │   └── Settings.tsx     # AI configuration
+│   │   │   ├── Dashboard.tsx       # Crawl console
+│   │   │   ├── Candidates.tsx      # Content management
+│   │   │   ├── Stickers.tsx        # Comic sticker workshop
+│   │   │   ├── ShareGenerator.tsx  # Share article generator
+│   │   │   └── Settings.tsx        # AI configuration
 │   │   └── lib/api.ts      # API client
 │   └── package.json
 ├── electron/               # Desktop wrapper
@@ -284,6 +317,11 @@ topic-advisor/
 | `GET` | `/api/stickers/:id` | Get comic details |
 | `POST` | `/api/stickers/:id/recompose` | Re-render text overlay (font/color/layout) |
 | `GET` | `/api/stickers/:id/export` | Export combined image |
+| `GET` | `/api/shares/generate` | SSE share article generation |
+| `GET` | `/api/shares` | List generated shares |
+| `GET` | `/api/shares/:id` | Get share details |
+| `POST` | `/api/shares/:id/export` | Export share to platform format |
+| `GET` | `/api/shares/github-trending` | Fetch GitHub trending repos |
 
 ### Tech Stack
 

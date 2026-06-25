@@ -115,6 +115,62 @@ async function scrapeWebPage(url: string, urlType: UrlType): Promise<ScrapedCont
   return { urlType, url, title, description, body, images: images.slice(0, 10), meta: {} };
 }
 
+import type { TrendingRepo } from '../types.js';
+
+export async function scrapeGitHubTrending(since: 'daily' | 'weekly' | 'monthly' = 'daily'): Promise<TrendingRepo[]> {
+  const url = `https://github.com/trending?since=${since}`;
+  const resp = await fetch(url, {
+    headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' },
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!resp.ok) throw new Error(`GitHub Trending 请求失败: ${resp.status}`);
+  const html = await resp.text();
+
+  const repos: TrendingRepo[] = [];
+  const articlePattern = /<article\s+class="Box-row"[\s\S]*?<\/article>/g;
+  let match: RegExpExecArray | null;
+  let rank = 0;
+
+  while ((match = articlePattern.exec(html)) !== null && rank < 30) {
+    rank++;
+    const block = match[0];
+
+    const nameMatch = block.match(/href="\/([\w.-]+\/[\w.-]+)"/);
+    if (!nameMatch) continue;
+    const fullName = nameMatch[1];
+    const [owner, repo] = fullName.split('/');
+
+    const descMatch = block.match(/<p[^>]*>([^<]*)<\/p>/);
+    const description = descMatch ? descMatch[1].trim() : '';
+
+    const langMatch = block.match(/itemprop="programmingLanguage"[^>]*>([^<]*)</);
+    const language = langMatch ? langMatch[1].trim() : '';
+
+    const starsMatch = block.match(/href="\/[\w.-]+\/[\w.-]+\/stargazers"[^>]*>\s*([\d,]+)/);
+    const stars = starsMatch ? parseInt(starsMatch[1].replace(/,/g, ''), 10) : 0;
+
+    const forksMatch = block.match(/href="\/[\w.-]+\/[\w.-]+\/forks"[^>]*>\s*([\d,]+)/);
+    const forks = forksMatch ? parseInt(forksMatch[1].replace(/,/g, ''), 10) : 0;
+
+    const todayMatch = block.match(/([\d,]+)\s+stars?\s+today/i);
+    const todayStars = todayMatch ? parseInt(todayMatch[1].replace(/,/g, ''), 10) : 0;
+
+    repos.push({
+      rank,
+      name: repo,
+      fullName,
+      url: `https://github.com/${fullName}`,
+      description,
+      language,
+      stars,
+      forks,
+      todayStars,
+    });
+  }
+
+  return repos;
+}
+
 export async function scrapeUrl(url: string): Promise<ScrapedContent> {
   const urlType = detectUrlType(url);
 
