@@ -7,11 +7,12 @@ export async function shareRoutes(app: FastifyInstance) {
     return listShares();
   });
 
-  app.post<{ Params: { id: string } }>('/api/shares/:id/export', async (req, reply) => {
+  app.post<{ Params: { id: string }; Body: { platform?: string } }>('/api/shares/:id/export', async (req, reply) => {
     const share = getShare(req.params.id);
     if (!share) return reply.status(404).send({ error: 'Share not found' });
     try {
-      const exportDir = exportShare(share);
+      const platform = req.body?.platform || 'markdown';
+      const exportDir = exportShare(share, platform);
       return { exportDir };
     } catch (err) {
       return reply.status(500).send({ error: String(err) });

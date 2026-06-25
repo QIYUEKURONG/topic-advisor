@@ -315,8 +315,11 @@ export const api = {
 
   getShare: (id: string) => request<GeneratedShare>(`/shares/${id}`),
 
-  exportShare: (id: string) =>
-    request<{ exportDir: string }>(`/shares/${id}/export`, { method: 'POST' }),
+  exportShare: (id: string, platform: string = 'markdown') =>
+    request<{ exportDir: string }>(`/shares/${id}/export`, {
+      method: 'POST',
+      body: JSON.stringify({ platform }),
+    }),
 };
 
 // ── Share Generator types ──

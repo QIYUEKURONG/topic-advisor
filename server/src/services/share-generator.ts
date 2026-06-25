@@ -367,7 +367,102 @@ export function getShare(id: string): GeneratedShare | null {
   try { return JSON.parse(readFileSync(p, 'utf-8')); } catch { return null; }
 }
 
-export function exportShare(share: GeneratedShare): string {
+const PLATFORM_FORMATTERS: Record<string, (share: GeneratedShare) => { content: string; ext: string }> = {
+  markdown: (share) => {
+    const { article, scraped } = share;
+    const images = scraped.images || [];
+    const lines: string[] = [`# ${article.title}`, '', `> ${article.hook}`, ''];
+    const sectionCount = article.sections.length;
+    const imgInterval = sectionCount > 0 && images.length > 0
+      ? Math.max(1, Math.floor(sectionCount / images.length)) : 0;
+
+    article.sections.forEach((sec, i) => {
+      lines.push(`## ${sec.heading}`, '', sec.body, '');
+      if (imgInterval > 0 && (i + 1) % imgInterval === 0) {
+        const imgIdx = Math.floor((i + 1) / imgInterval) - 1;
+        if (imgIdx < images.length) lines.push(`![${sec.heading}](${images[imgIdx]})`, '');
+      }
+    });
+    lines.push('---', '', article.conclusion, '', article.tags.map(t => `#${t}`).join(' '));
+    return { content: lines.join('\n'), ext: 'md' };
+  },
+
+  toutiao: (share) => {
+    const { article, scraped } = share;
+    const images = scraped.images || [];
+    const lines: string[] = [article.title, '', article.hook, ''];
+    article.sections.forEach((sec, i) => {
+      lines.push(`【${sec.heading}】`, '', sec.body, '');
+      if (i < images.length) lines.push(`[图片: ${images[i]}]`, '');
+    });
+    lines.push('', article.conclusion, '', article.tags.map(t => `#${t}`).join(' '));
+    return { content: lines.join('\n'), ext: 'txt' };
+  },
+
+  wechat: (share) => {
+    const { article, scraped } = share;
+    const images = scraped.images || [];
+    const lines: string[] = [
+      `# ${article.title}`, '',
+      `> ${article.hook}`, '',
+    ];
+    article.sections.forEach((sec, i) => {
+      lines.push(`## ${sec.heading}`, '', sec.body, '');
+      if (i < images.length) lines.push(`![](${images[i]})`, '');
+    });
+    lines.push('', `**${article.conclusion}**`, '', article.tags.map(t => `#${t}`).join(' '),
+      '', '---', `原文链接：${share.url}`);
+    return { content: lines.join('\n'), ext: 'md' };
+  },
+
+  xiaohongshu: (share) => {
+    const { article } = share;
+    const lines: string[] = [
+      article.title + ' ‼️', '',
+      article.hook, '',
+    ];
+    article.sections.forEach(sec => {
+      lines.push(`📌 ${sec.heading}`, '', sec.body, '');
+    });
+    lines.push('', `💡 ${article.conclusion}`, '', article.tags.map(t => `#${t}`).join(' '));
+    return { content: lines.join('\n'), ext: 'txt' };
+  },
+
+  zhihu: (share) => {
+    const { article, scraped } = share;
+    const images = scraped.images || [];
+    const lines: string[] = [`# ${article.title}`, '', `> ${article.hook}`, ''];
+    article.sections.forEach((sec, i) => {
+      lines.push(`## ${sec.heading}`, '', sec.body, '');
+      if (i < images.length) lines.push(`![](${images[i]})`, '');
+    });
+    lines.push('', '---', '', article.conclusion, '', article.tags.map(t => `#${t}`).join(' '),
+      '', `> 来源：${share.url}`);
+    return { content: lines.join('\n'), ext: 'md' };
+  },
+
+  douyin: (share) => {
+    const { article } = share;
+    const lines: string[] = [
+      `🔥 ${article.title}`, '',
+      article.hook, '',
+    ];
+    article.sections.forEach(sec => {
+      lines.push(`👉 ${sec.heading}`, sec.body, '');
+    });
+    lines.push(`✅ ${article.conclusion}`, '', article.tags.map(t => `#${t}`).join(' '));
+    return { content: lines.join('\n'), ext: 'txt' };
+  },
+
+  weibo: (share) => {
+    const { article } = share;
+    const sections = article.sections.map(s => `【${s.heading}】${s.body}`).join('\n\n');
+    const text = `${article.title}\n\n${article.hook}\n\n${sections}\n\n${article.conclusion}\n\n${article.tags.map(t => `#${t}#`).join(' ')}`;
+    return { content: text, ext: 'txt' };
+  },
+};
+
+export function exportShare(share: GeneratedShare, platform: string = 'markdown'): string {
   const settings = getSettings();
   const timestamp = new Date().toISOString().replace(/[:.]/g, '').slice(0, 15);
   const slug = share.article.title
@@ -378,49 +473,10 @@ export function exportShare(share: GeneratedShare): string {
   const exportDir = join(settings.outputDir, 'shares', timestamp);
   if (!existsSync(exportDir)) mkdirSync(exportDir, { recursive: true });
 
-  const { article, scraped } = share;
-  const lines: string[] = [
-    `# ${article.title}`,
-    '',
-    `> ${article.hook}`,
-    '',
-  ];
-
-  const images = scraped.images || [];
-  const sectionCount = article.sections.length;
-  const imgInterval = sectionCount > 0 && images.length > 0
-    ? Math.max(1, Math.floor(sectionCount / images.length))
-    : 0;
-
-  article.sections.forEach((sec, i) => {
-    lines.push(`## ${sec.heading}`, '', sec.body, '');
-
-    if (imgInterval > 0 && (i + 1) % imgInterval === 0) {
-      const imgIdx = Math.floor((i + 1) / imgInterval) - 1;
-      if (imgIdx < images.length) {
-        lines.push(`![${sec.heading}](${images[imgIdx]})`, '');
-      }
-    }
-  });
-
-  lines.push(
-    '---', '',
-    article.conclusion, '',
-    article.tags.map(t => `#${t}`).join(' '), '',
-    '---', '',
-    `- 来源: ${scraped.title}`,
-    `- 类型: ${share.urlType === 'github' ? 'GitHub 项目' : share.urlType === 'paper' ? '论文' : '文章'}`,
-    `- 原文链接: ${share.url}`,
-    `- 生成时间: ${share.createdAt}`,
-  );
-
-  const metaEntries = Object.entries(scraped.meta).filter(([, v]) => v !== '' && v !== 0 && v !== 'N/A');
-  if (metaEntries.length > 0) {
-    metaEntries.forEach(([k, v]) => lines.push(`- ${k}: ${v}`));
-  }
-
-  const filename = `${slug}.md`;
-  writeFileSync(join(exportDir, filename), lines.join('\n'), 'utf-8');
+  const formatter = PLATFORM_FORMATTERS[platform] || PLATFORM_FORMATTERS.markdown;
+  const { content, ext } = formatter(share);
+  const filename = `${slug}.${ext}`;
+  writeFileSync(join(exportDir, filename), content, 'utf-8');
 
   return exportDir;
 }

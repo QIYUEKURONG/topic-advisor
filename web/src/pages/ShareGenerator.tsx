@@ -22,6 +22,16 @@ const ARTICLE_STYLES = [
 
 type ArticleStyle = (typeof ARTICLE_STYLES)[number]['id'];
 
+const EXPORT_PLATFORMS = [
+  { id: 'toutiao', label: '头条', icon: '📰' },
+  { id: 'wechat', label: '公众号', icon: '💬' },
+  { id: 'xiaohongshu', label: '小红书', icon: '📕' },
+  { id: 'zhihu', label: '知乎', icon: '🔍' },
+  { id: 'douyin', label: '抖音', icon: '🎵' },
+  { id: 'weibo', label: '微博', icon: '🔥' },
+  { id: 'markdown', label: 'Markdown', icon: '📝' },
+];
+
 export default function ShareGenerator() {
   const [url, setUrl] = useState('');
   const [articleStyle, setArticleStyle] = useState<ArticleStyle>('popular');
@@ -36,6 +46,8 @@ export default function ShareGenerator() {
   const [copyTip, setCopyTip] = useState('');
   const [exportTip, setExportTip] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [copied, setCopied] = useState(false);
   const esRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
@@ -116,12 +128,13 @@ export default function ShareGenerator() {
     });
   }
 
-  async function handleExport() {
+  async function handleExport(platform: string) {
     if (!share || exporting) return;
+    setShowExportMenu(false);
     setExporting(true);
     setExportTip('');
     try {
-      const res = await api.exportShare(share.id);
+      const res = await api.exportShare(share.id, platform);
       setExportTip(`已导出到: ${res.exportDir}`);
       setTimeout(() => setExportTip(''), 5000);
     } catch (err: any) {
@@ -129,6 +142,42 @@ export default function ShareGenerator() {
     } finally {
       setExporting(false);
     }
+  }
+
+  async function handleCopyWithImages() {
+    if (!share) return;
+    const { article, scraped } = share;
+    const images = scraped.images || [];
+
+    const plainText = [
+      article.title, '', article.hook, '',
+      ...article.sections.flatMap(s => [`## ${s.heading}`, '', s.body, '']),
+      article.conclusion, '', article.tags.map(t => `#${t}`).join(' '),
+    ].join('\n');
+
+    try {
+      const sectionsHtml = article.sections.map((sec, i) => {
+        const bodyHtml = sec.body.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>');
+        const imgInterval = article.sections.length > 0 && images.length > 0
+          ? Math.max(1, Math.floor(article.sections.length / images.length)) : 0;
+        const imgIdx = imgInterval > 0 && (i + 1) % imgInterval === 0
+          ? Math.floor((i + 1) / imgInterval) - 1 : -1;
+        const imgHtml = imgIdx >= 0 && imgIdx < images.length
+          ? `<p><img src="${images[imgIdx]}" style="max-width:100%;height:auto;border-radius:8px;margin:12px 0;" /></p>` : '';
+        return `<h3>${sec.heading}</h3><p>${bodyHtml}</p>${imgHtml}`;
+      }).join('');
+
+      const fullHtml = `<h2>${article.title}</h2><blockquote>${article.hook}</blockquote>${sectionsHtml}<p><strong>${article.conclusion}</strong></p><p>${article.tags.map(t => `#${t}`).join(' ')}</p>`;
+      const htmlBlob = new Blob([fullHtml], { type: 'text/html' });
+      const textBlob = new Blob([plainText], { type: 'text/plain' });
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob }),
+      ]);
+    } catch {
+      await navigator.clipboard.writeText(plainText);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   const pct = progress.total > 0 ? Math.round((progress.value / progress.total) * 100) : 0;
@@ -246,19 +295,52 @@ export default function ShareGenerator() {
           <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold">{share.article.title}</h3>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                {/* Export dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowExportMenu(!showExportMenu)}
+                    disabled={exporting}
+                    className="px-3 py-1.5 text-xs font-medium rounded-lg border border-green-200 text-green-700 bg-white hover:bg-green-50 hover:border-green-300 transition-all disabled:opacity-50"
+                  >
+                    {exporting ? '导出中...' : '导出 ▾'}
+                  </button>
+                  {showExportMenu && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)} />
+                      <div className="absolute right-0 z-20 bg-white rounded-xl shadow-lg border border-gray-200 py-1 min-w-[160px] top-full mt-1">
+                        <div className="px-3 py-1.5 text-xs text-gray-400 font-medium">选择导出格式</div>
+                        {EXPORT_PLATFORMS.map(p => (
+                          <button
+                            key={p.id}
+                            onClick={() => handleExport(p.id)}
+                            className="w-full px-3 py-2 text-left text-sm hover:bg-green-50 hover:text-green-700 transition-colors flex items-center gap-2"
+                          >
+                            <span>{p.icon}</span>
+                            <span>{p.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+                {/* Copy with images */}
                 <button
-                  onClick={handleExport}
-                  disabled={exporting}
-                  className="text-sm text-green-600 hover:text-green-700 font-medium disabled:opacity-50"
+                  onClick={handleCopyWithImages}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${
+                    copied
+                      ? 'bg-green-100 text-green-700 border-green-300'
+                      : 'bg-white text-brand-700 border-brand-200 hover:bg-brand-50 hover:border-brand-300'
+                  }`}
                 >
-                  {exporting ? '导出中...' : '导出 MD'}
+                  {copied ? '已复制（含图片）' : '复制全文+图片'}
                 </button>
+                {/* Copy plain text */}
                 <button
                   onClick={copyArticleText}
-                  className="text-sm text-brand-500 hover:text-brand-600 font-medium"
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 hover:border-gray-300 transition-all"
                 >
-                  {copyTip || '复制全文'}
+                  {copyTip || '复制纯文本'}
                 </button>
               </div>
             </div>
