@@ -207,26 +207,49 @@ export default function ShareGenerator() {
               {share.article.hook}
             </p>
 
-            {share.article.sections.map((sec, i) => (
-              <div key={i} className="mb-5">
-                <h4 className="font-semibold text-base mb-2">{sec.heading}</h4>
-                <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap"
-                  dangerouslySetInnerHTML={{
-                    __html: sec.body.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'),
-                  }}
-                />
-                {linkedComic && linkedComic.finalImages[i] && (
-                  <div className="mt-3">
-                    <img
-                      src={api.getComicImageUrl(linkedComic.id, linkedComic.finalImages[i], linkedComic.version)}
-                      alt={sec.heading}
-                      className="rounded-lg max-w-full shadow-sm border"
-                      style={{ maxHeight: 300 }}
-                    />
-                  </div>
-                )}
-              </div>
-            ))}
+            {share.article.sections.map((sec, i) => {
+              const imgs = share.scraped.images || [];
+              const sectionCount = share.article.sections.length;
+              const imgInterval = sectionCount > 0 && imgs.length > 0
+                ? Math.max(1, Math.floor(sectionCount / imgs.length))
+                : 0;
+              const imgIndex = imgInterval > 0 && (i + 1) % imgInterval === 0
+                ? Math.floor((i + 1) / imgInterval) - 1
+                : -1;
+              const inlineImg = imgIndex >= 0 && imgIndex < imgs.length ? imgs[imgIndex] : null;
+
+              return (
+                <div key={i} className="mb-5">
+                  <h4 className="font-semibold text-base mb-2">{sec.heading}</h4>
+                  <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap"
+                    dangerouslySetInnerHTML={{
+                      __html: sec.body.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'),
+                    }}
+                  />
+                  {linkedComic && linkedComic.finalImages[i] && (
+                    <div className="mt-3">
+                      <img
+                        src={api.getComicImageUrl(linkedComic.id, linkedComic.finalImages[i], linkedComic.version)}
+                        alt={sec.heading}
+                        className="rounded-lg max-w-full shadow-sm border"
+                        style={{ maxHeight: 300 }}
+                      />
+                    </div>
+                  )}
+                  {inlineImg && (
+                    <a href={inlineImg} target="_blank" rel="noopener noreferrer" className="block mt-4">
+                      <img
+                        src={inlineImg}
+                        alt={`Demo ${imgIndex + 1}`}
+                        className="rounded-lg border max-w-full shadow-sm hover:opacity-90 transition-opacity"
+                        loading="lazy"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    </a>
+                  )}
+                </div>
+              );
+            })}
 
             <p className="text-gray-800 font-medium mt-4 pt-4 border-t">
               {share.article.conclusion}
@@ -281,24 +304,6 @@ export default function ShareGenerator() {
               </a>
             </div>
 
-            {share.scraped.images && share.scraped.images.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm border p-4">
-                <h4 className="font-semibold text-sm mb-3">项目截图/演示</h4>
-                <div className="space-y-2">
-                  {share.scraped.images.map((img, i) => (
-                    <a key={i} href={img} target="_blank" rel="noopener noreferrer">
-                      <img
-                        src={img}
-                        alt={`Screenshot ${i + 1}`}
-                        className="rounded-lg border w-full hover:opacity-80 transition-opacity cursor-pointer"
-                        loading="lazy"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                      />
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {linkedComic && (
               <div className="bg-white rounded-xl shadow-sm border p-4">
