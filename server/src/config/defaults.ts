@@ -36,7 +36,7 @@ export const DEFAULT_SETTINGS: Settings = {
   ],
   repostTemplate: '本文转载自 {source}，原文链接：{url}',
   dedupWindowHours: 24,
-  enableScoreFilter: false,
+  enableScoreFilter: true,
   enableRewrite: false,
   aiProvider: {
     provider: 'deepseek',

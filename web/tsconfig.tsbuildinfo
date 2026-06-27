@@ -1,1 +1,1 @@
-{"root":["./src/app.tsx","./src/main.tsx","./src/lib/api.ts","./src/pages/candidates.tsx","./src/pages/dashboard.tsx","./src/pages/settings.tsx","./src/pages/sharegenerator.tsx","./src/pages/stickers.tsx"],"version":"5.9.3"}
+{"root":["./src/app.tsx","./src/main.tsx","./src/lib/api.ts","./src/pages/candidates.tsx","./src/pages/dashboard.tsx","./src/pages/knowledgecards.tsx","./src/pages/settings.tsx","./src/pages/sharegenerator.tsx","./src/pages/stickers.tsx","./src/pages/trendanalyzer.tsx"],"version":"5.9.3"}

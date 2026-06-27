@@ -15,7 +15,11 @@ import {
   baiduEntSearch, baiduSportsSearch, baiduHealthSearch,
   baiduTechSearch, baiduCarSearch, baiduEduSearch,
   baiduFoodSearch, baiduHouseSearch, baiduPsychSearch,
+  baiduSideHustleSearch,
 } from './baidu-news-search.js';
+import { v2exSideHustle } from './v2ex.js';
+import { zhihuSideHustleSearch, xhsSideHustleSearch } from './bing-site-search.js';
+import { wechatHot } from './sogou-wechat.js';
 import { ithome } from './ithome.js';
 import { jiqizhixin } from './jiqizhixin.js';
 import { qbitai } from './qbitai.js';
@@ -63,6 +67,13 @@ const ALL_CRAWLERS: CrawlerAdapter[] = [
   baiduFoodSearch,
   baiduHouseSearch,
   baiduPsychSearch,
+  baiduSideHustleSearch,
+  // WeChat trend monitoring
+  wechatHot,
+  // Side-hustle sources
+  v2exSideHustle,
+  zhihuSideHustleSearch,
+  xhsSideHustleSearch,
   // RSS feeds
   peopleDaily,
   bbc_zh,

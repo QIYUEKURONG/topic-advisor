@@ -204,6 +204,7 @@ async function generateImageSeedream(
       prompt,
       size: '1920x1920',
       response_format: 'url',
+      logo_info: { add_logo: false },
     }),
     signal: AbortSignal.timeout(120_000),
   });

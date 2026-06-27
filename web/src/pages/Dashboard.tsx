@@ -161,6 +161,21 @@ const TOPIC_PRESETS: Record<string, { label: string; icon: string; extraSources:
       '亲密关系', '边界感', '自我成长', '自律',
     ],
   },
+  sidehustle: {
+    label: '副业赚钱',
+    icon: '💼',
+    extraSources: ['zhihu-sidehustle', 'xhs-sidehustle', 'v2ex-sidehustle', 'baidu-sidehustle-search'],
+    keywords: [
+      '副业', '兼职', '赚钱', '挣钱', '搞钱', '外快',
+      '接单', '外包', '私活', 'freelance', '自由职业',
+      '远程工作', '居家办公', '在家赚钱',
+      '变现', '被动收入', '月入',
+      '独立开发', '个人项目',
+      '自媒体', '知识付费', '写作变现', '带货',
+      '闲鱼', '开店', '代购', '跨境电商',
+      '接活', '写代码赚钱',
+    ],
+  },
 };
 
 export default function Dashboard() {
@@ -171,6 +186,7 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [recentTasks, setRecentTasks] = useState<TaskSummary[]>([]);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  const [scoreFilterOn, setScoreFilterOn] = useState(true);
   const navigate = useNavigate();
 
   const loadTasks = useCallback(async () => {
@@ -184,6 +200,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadTasks();
+    api.getSettings().then(s => setScoreFilterOn(s.enableScoreFilter)).catch(() => {});
   }, [loadTasks]);
 
   const handleStart = async () => {
@@ -297,6 +314,20 @@ export default function Dashboard() {
 
         {/* Start button */}
         <div className="flex items-center gap-3">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={scoreFilterOn}
+              onChange={async (e) => {
+                const v = e.target.checked;
+                setScoreFilterOn(v);
+                try { await api.updateSettings({ enableScoreFilter: v }); } catch {}
+              }}
+              className="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500"
+            />
+            <span className="text-sm text-gray-600">评分过滤</span>
+          </label>
+
           {!running ? (
             <button
               onClick={handleStart}

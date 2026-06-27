@@ -4,7 +4,7 @@ import PQueue from 'p-queue';
 import type { CrawlTask, CandidateArticle, RawArticle, SSEEvent, CrawlLogEntry } from '../types.js';
 import { getSettings } from '../config/settings.js';
 import { getEnabledCrawlers } from '../crawlers/registry.js';
-import { sensitiveFilter, lengthFilter } from './filter.js';
+import { sensitiveFilter, lengthFilter, junkTitleFilter } from './filter.js';
 import { scoreArticle } from './scorer.js';
 import { classifyArticle } from './classifier.js';
 import { saveTask, getHistoryUrls, getHistoryTitles, isTitleDuplicate } from './storage.js';
@@ -79,8 +79,8 @@ class TaskRunner extends EventEmitter {
     const settings = this.taskTopicKeywords
       ? { ...baseSettings, topicKeywords: this.taskTopicKeywords }
       : baseSettings;
-    const sourceIds = this.taskExtraSources
-      ? [...new Set([...settings.enabledSources, ...this.taskExtraSources])]
+    const sourceIds = this.taskExtraSources && this.taskExtraSources.length > 0
+      ? this.taskExtraSources
       : settings.enabledSources;
     const crawlers = getEnabledCrawlers(sourceIds);
 
@@ -141,6 +141,12 @@ class TaskRunner extends EventEmitter {
       if (!lengthFilter(raw)) {
         task.filteredCount++;
         this.addLog('info', `Filtered (too short): ${raw.title} (${raw.content.length} chars)`);
+        continue;
+      }
+
+      if (!junkTitleFilter(raw)) {
+        task.filteredCount++;
+        this.addLog('info', `Filtered (junk title): ${raw.title}`);
         continue;
       }
 

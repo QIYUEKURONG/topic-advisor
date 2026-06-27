@@ -301,3 +301,14 @@ export const baiduPsychSearch = createMultiQuerySearchCrawler(
     '人格 性格 心理测试 认知',
   ],
 );
+
+export const baiduSideHustleSearch = createMultiQuerySearchCrawler(
+  'baidu-sidehustle-search',
+  '百度副业赚钱',
+  [
+    '程序员副业 接私活 实操经验分享',
+    '普通人副业 月入过千 真实经历',
+    '远程接单 自由职业者 一天工作',
+    '独立开发者 产品上线 收入公开',
+  ],
+);

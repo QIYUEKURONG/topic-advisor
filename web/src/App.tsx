@@ -4,9 +4,13 @@ import Candidates from './pages/Candidates';
 import Stickers from './pages/Stickers';
 import ShareGenerator from './pages/ShareGenerator';
 import Settings from './pages/Settings';
+import TrendAnalyzer from './pages/TrendAnalyzer';
+import KnowledgeCards from './pages/KnowledgeCards';
 
 const NAV_ITEMS = [
   { path: '/', label: '控制台', icon: '🎯' },
+  { path: '/trends', label: '爆火趋势', icon: '🔥' },
+  { path: '/cards', label: '知识卡片', icon: '📋' },
   { path: '/share', label: '分享生成', icon: '📢' },
   { path: '/stickers', label: '漫画贴图', icon: '🎨' },
   { path: '/settings', label: '设置', icon: '⚙️' },
@@ -47,6 +51,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/tasks/:id" element={<Candidates />} />
+          <Route path="/trends" element={<TrendAnalyzer />} />
+          <Route path="/cards" element={<KnowledgeCards />} />
           <Route path="/share" element={<ShareGenerator />} />
           <Route path="/stickers" element={<Stickers />} />
           <Route path="/settings" element={<Settings />} />

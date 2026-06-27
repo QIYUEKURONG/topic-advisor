@@ -28,6 +28,7 @@ export default function Candidates() {
   const [error, setError] = useState<string | null>(null);
   const [showLogs, setShowLogs] = useState(false);
   const [activeCategory, setActiveCategory] = useState<ArticleCategory | 'all'>('all');
+  const [activeSource, setActiveSource] = useState<string>('all');
   const [contentType, setContentType] = useState<ContentType>('all');
   const [toutiaoUser, setToutiaoUser] = useState<{ loggedIn: boolean; username?: string; available?: boolean } | null>(null);
   const [loginLoading, setLoginLoading] = useState(false);
@@ -61,6 +62,16 @@ export default function Candidates() {
     return { article, video };
   }, [task]);
 
+  const sourceStats = useMemo(() => {
+    if (!task) return {} as Record<string, number>;
+    const stats: Record<string, number> = {};
+    for (const c of task.candidates) {
+      const src = c.source || '未知';
+      stats[src] = (stats[src] || 0) + 1;
+    }
+    return stats;
+  }, [task]);
+
   const filteredCandidates = useMemo(() => {
     if (!task) return [];
     let items = task.candidates;
@@ -75,8 +86,12 @@ export default function Candidates() {
       items = items.filter((c) => c.category === activeCategory);
     }
 
+    if (activeSource !== 'all') {
+      items = items.filter((c) => c.source === activeSource);
+    }
+
     return [...items].sort((a, b) => b.topicScore - a.topicScore);
-  }, [task, activeCategory, contentType]);
+  }, [task, activeCategory, activeSource, contentType]);
 
   const toggleSelect = (articleId: string) => {
     setSelected((prev) => {
@@ -391,6 +406,38 @@ export default function Candidates() {
           </button>
         ))}
       </div>
+
+      {/* Source filter tabs */}
+      {Object.keys(sourceStats).length > 1 && (
+        <div className="mb-4 flex flex-wrap gap-2 items-center">
+          <span className="text-xs text-gray-400 mr-1">来源:</span>
+          <button
+            onClick={() => setActiveSource('all')}
+            className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+              activeSource === 'all'
+                ? 'bg-orange-500 text-white'
+                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+            }`}
+          >
+            全部 ({task?.candidates.length || 0})
+          </button>
+          {Object.entries(sourceStats)
+            .sort((a, b) => b[1] - a[1])
+            .map(([src, count]) => (
+            <button
+              key={src}
+              onClick={() => setActiveSource(src)}
+              className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                activeSource === src
+                  ? 'bg-orange-500 text-white'
+                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+              }`}
+            >
+              {src} ({count})
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="space-y-3">
         {filteredCandidates.map((article) => (

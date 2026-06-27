@@ -383,6 +383,90 @@ export interface GeneratedShare {
   createdAt: string;
 }
 
+// ── Trend Analyzer types ──
+
+export interface EngagementData {
+  reads?: number;
+  comments?: number;
+  likes?: number;
+  shares?: number;
+  score: number;
+}
+
+export interface TrendItem {
+  id: string;
+  title: string;
+  url: string;
+  source: string;
+  sourceId: string;
+  content: string;
+  engagement: EngagementData;
+  keywords: string[];
+  category: string;
+  fetchedAt: string;
+}
+
+export interface HotTopic {
+  keyword: string;
+  count: number;
+  avgEngagement: number;
+  topArticles: TrendItem[];
+  trend: 'rising' | 'stable' | 'declining';
+}
+
+export interface TrendSnapshot {
+  id: string;
+  date: string;
+  items: TrendItem[];
+  hotTopics: HotTopic[];
+  createdAt: string;
+}
+
+export interface ViralAnalysis {
+  score: number;
+  maxScore: number;
+  breakdown: { label: string; score: number; maxScore: number; reason: string }[];
+  matchedTrends: string[];
+  suggestions: string[];
+}
+
+export interface TrendPlatform {
+  id: string;
+  name: string;
+}
+
+export interface TrendDirection {
+  id: string;
+  label: string;
+  keywords: string[];
+}
+
+export interface SnapshotSummary {
+  id: string;
+  date: string;
+  itemCount: number;
+  topicCount: number;
+  createdAt: string;
+}
+
+export const trendApi = {
+  getPlatforms: () => request<TrendPlatform[]>('/trends/platforms'),
+  getDirections: () => request<TrendDirection[]>('/trends/directions'),
+  getLatest: () => request<TrendSnapshot | { items: []; hotTopics: []; date: null }>('/trends/latest'),
+  listSnapshots: (limit = 30) => request<SnapshotSummary[]>(`/trends/snapshots?limit=${limit}`),
+  getSnapshot: (id: string) => request<TrendSnapshot>(`/trends/snapshots/${id}`),
+  startCrawl: (sourceIds?: string[], direction?: string) =>
+    request<TrendSnapshot>('/trends/crawl', {
+      method: 'POST',
+      body: JSON.stringify({ sourceIds, direction }),
+    }),
+  analyzeArticle: (title: string, content: string) =>
+    request<ViralAnalysis>('/trends/analyze', {
+      method: 'POST',
+      body: JSON.stringify({ title, content }),
+    }),
+};
+
 export function createStickerSSE(
   topic: string,
   style: ComicStyle,
