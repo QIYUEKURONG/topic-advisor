@@ -1,10 +1,10 @@
-import type { Browser, Cookie, Page } from 'puppeteer';
+import type { Browser, Cookie, Page } from 'puppeteer-core';
 
 async function getPuppeteer() {
   try {
-    return (await import('puppeteer')).default;
+    return (await import('puppeteer-core')).default;
   } catch {
-    throw new Error('Puppeteer is not available. This feature requires a development environment with puppeteer installed.');
+    throw new Error('Puppeteer is not available. This feature requires puppeteer-core installed.');
   }
 }
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';

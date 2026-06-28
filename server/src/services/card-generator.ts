@@ -1,6 +1,6 @@
 import { mkdirSync, existsSync, writeFileSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
 import { fetch } from 'undici';
 import { getSettings } from '../config/settings.js';
 import { renderCardHTML, CARD_LAYOUTS, CARD_STYLES } from './card-templates.js';
@@ -105,9 +105,34 @@ async function aiGenerateCardContent(
   };
 }
 
+function findChromePath(): string {
+  const candidates = [
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/Applications/Chromium.app/Contents/MacOS/Chromium',
+    '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+    '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser',
+    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+    '/usr/bin/google-chrome',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/chromium',
+  ];
+  const { existsSync } = require('fs');
+  for (const p of candidates) {
+    if (existsSync(p)) return p;
+  }
+  throw new Error(
+    '未找到 Chrome/Chromium 浏览器。知识卡片功能需要安装 Google Chrome。\n' +
+    '请从 https://www.google.com/chrome/ 下载安装后重试。',
+  );
+}
+
 async function renderToPNG(html: string, outputPath: string): Promise<void> {
+  const chromePath = findChromePath();
   const browser = await puppeteer.launch({
     headless: true,
+    executablePath: chromePath,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
   });
 

@@ -1,5 +1,5 @@
 import { build } from 'esbuild';
-import { cpSync, mkdirSync, existsSync, readdirSync, rmSync } from 'fs';
+import { cpSync, mkdirSync, existsSync, readdirSync, rmSync, readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -16,7 +16,7 @@ await build({
   sourcemap: false,
   minify: false,
   external: [
-    'puppeteer',
+    'puppeteer-core',
     'sharp',
   ],
   banner: {
@@ -74,6 +74,54 @@ if (existsSync(pnpmStore)) {
       cpSync(src, join(dest, '@img', 'colour'), { recursive: true, dereference: true });
     }
   }
+
+  // Recursively copy a package and all its dependencies from pnpm store
+  function copyPkg(name, visited = new Set()) {
+    if (visited.has(name)) return;
+    visited.add(name);
+
+    // Handle scoped packages like @puppeteer/browsers → @puppeteer+browsers@
+    const storePrefix = name.replace(/\//g, '+');
+    const entries = readdirSync(pnpmStore).filter(e => e.startsWith(`${storePrefix}@`));
+    if (!entries.length) return;
+
+    const entry = entries[entries.length - 1];
+    const nmDir = join(pnpmStore, entry, 'node_modules');
+    if (!existsSync(nmDir)) return;
+
+    // Copy the package itself
+    const parts = name.split('/');
+    let pkgSrc, pkgDest;
+    if (parts.length === 2) {
+      pkgSrc = join(nmDir, parts[0], parts[1]);
+      const scopeDir = join(dest, parts[0]);
+      if (!existsSync(scopeDir)) mkdirSync(scopeDir, { recursive: true });
+      pkgDest = join(dest, parts[0], parts[1]);
+    } else {
+      pkgSrc = join(nmDir, name);
+      pkgDest = join(dest, name);
+    }
+
+    if (!existsSync(pkgSrc)) return;
+    if (existsSync(pkgDest)) rmSync(pkgDest, { recursive: true });
+    cpSync(pkgSrc, pkgDest, { recursive: true, dereference: true });
+
+    // Recursively copy dependencies
+    const pkgJsonPath = join(pkgDest, 'package.json');
+    if (existsSync(pkgJsonPath)) {
+      try {
+        const pkg = JSON.parse(readFileSync(pkgJsonPath, 'utf8'));
+        for (const dep of Object.keys(pkg.dependencies || {})) {
+          copyPkg(dep, visited);
+        }
+      } catch {}
+    }
+  }
+
+  // Copy puppeteer-core and all its transitive dependencies
+  const visited = new Set();
+  copyPkg('puppeteer-core', visited);
+  console.log(`Puppeteer-core + ${visited.size} deps copied to server/node_modules_electron/`);
 
   console.log('Sharp native deps copied to server/node_modules_electron/');
 }
