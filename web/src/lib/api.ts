@@ -155,6 +155,7 @@ export interface AppSettings {
   imageProvider: ImageProviderConfig;
   rewritePrompt: string;
   githubToken?: string;
+  hideAiWatermark?: boolean;
   deepseekApiKey?: string;
   deepseekBaseUrl?: string;
 }

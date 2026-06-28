@@ -268,6 +268,7 @@ export interface Settings {
   imageProvider: ImageProviderConfig;
   rewritePrompt: string;
   githubToken: string;
+  hideAiWatermark: boolean;
   /** @deprecated use aiProvider.apiKey */
   deepseekApiKey: string;
   /** @deprecated use aiProvider.baseUrl */

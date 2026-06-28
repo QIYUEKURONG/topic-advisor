@@ -200,20 +200,24 @@ ${style === 'narrative' ? `
 async function generateImageSeedream(
   prompt: string,
   config: ImageProviderConfig,
+  hideWatermark = true,
 ): Promise<string> {
+  const body: Record<string, any> = {
+    model: config.model || 'doubao-seedream-5-0-lite-260128',
+    prompt,
+    size: '1920x1920',
+    response_format: 'url',
+  };
+  if (hideWatermark) {
+    body.logo_info = { add_logo: false };
+  }
   const resp = await fetch(`${config.baseUrl}/api/v3/images/generations`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${config.apiKey}`,
     },
-    body: JSON.stringify({
-      model: config.model || 'doubao-seedream-5-0-lite-260128',
-      prompt,
-      size: '1920x1920',
-      response_format: 'url',
-      logo_info: { add_logo: false },
-    }),
+    body: JSON.stringify(body),
     signal: AbortSignal.timeout(120_000),
   });
 
@@ -300,8 +304,9 @@ async function generateImageCogView(
 async function generateImage(
   prompt: string,
   config: ImageProviderConfig,
+  hideWatermark = true,
 ): Promise<string> {
-  if (config.provider === 'seedream') return generateImageSeedream(prompt, config);
+  if (config.provider === 'seedream') return generateImageSeedream(prompt, config, hideWatermark);
   if (config.provider === 'dashscope') return generateImageDashScope(prompt, config);
   if (config.provider === 'cogview') return generateImageCogView(prompt, config);
   throw new Error(`不支持的图片提供商: ${config.provider}`);
@@ -408,7 +413,7 @@ export async function generateComic(
   for (let i = 0; i < count; i++) {
     try {
       onProgress?.('image', `生成第 ${i + 1}/${count} 张画面...`, step, totalSteps);
-      const imageUrl = await generateImage(prompts[i], imageConfig);
+      const imageUrl = await generateImage(prompts[i], imageConfig, settings.hideAiWatermark !== false);
       const rawPath = join(comicDir, `raw-${i + 1}.png`);
       await downloadImage(imageUrl, rawPath);
       rawImages.push(`raw-${i + 1}.png`);

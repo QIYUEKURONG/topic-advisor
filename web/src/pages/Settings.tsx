@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   api,
   type AppSettings,
@@ -42,6 +42,7 @@ export default function Settings() {
           };
         }
         setSettings(s);
+        setTimeout(() => { initialLoadDone.current = true; }, 100);
       })
       .catch((e) => setError(e.message));
   }, []);
@@ -90,27 +91,43 @@ export default function Settings() {
     });
   };
 
+  const initialLoadDone = useRef(false);
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const doSave = useCallback(async (s: AppSettings) => {
+    try {
+      await api.updateSettings({
+        aiProvider: s.aiProvider,
+        imageProvider: s.imageProvider,
+        rewritePrompt: s.rewritePrompt,
+        enableRewrite: s.enableRewrite,
+        dedupWindowHours: s.dedupWindowHours,
+        enableScoreFilter: s.enableScoreFilter,
+        sensitiveWords: s.sensitiveWords,
+        githubToken: s.githubToken,
+        hideAiWatermark: s.hideAiWatermark,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (e: any) {
+      setError(e.message);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!settings || !initialLoadDone.current) return;
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => doSave(settings), 800);
+    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
+  }, [settings, doSave]);
+
   const handleSave = async () => {
     if (!settings) return;
     setSaving(true);
     setError(null);
     setSaved(false);
     try {
-      const updated = await api.updateSettings({
-        aiProvider: settings.aiProvider,
-        imageProvider: settings.imageProvider,
-        rewritePrompt: settings.rewritePrompt,
-        enableRewrite: settings.enableRewrite,
-        dedupWindowHours: settings.dedupWindowHours,
-        enableScoreFilter: settings.enableScoreFilter,
-        sensitiveWords: settings.sensitiveWords,
-        githubToken: settings.githubToken,
-      });
-      setSettings(updated);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
-    } catch (e: any) {
-      setError(e.message);
+      await doSave(settings);
     } finally {
       setSaving(false);
     }
@@ -141,8 +158,23 @@ export default function Settings() {
   if (!settings) {
     return (
       <div className="p-8 text-center text-gray-400">
-        <div className="animate-pulse text-4xl mb-4">⏳</div>
-        加载设置中...
+        {error ? (
+          <>
+            <div className="text-4xl mb-4">⚠️</div>
+            <div className="text-red-500 mb-4">加载设置失败: {error}</div>
+            <button
+              onClick={() => { setError(null); api.getSettings().then(s => setSettings(s)).catch(e => setError(e.message)); }}
+              className="px-4 py-2 bg-violet-500 text-white rounded-lg hover:bg-violet-600"
+            >
+              重试
+            </button>
+          </>
+        ) : (
+          <>
+            <div className="animate-pulse text-4xl mb-4">⏳</div>
+            加载设置中...
+          </>
+        )}
       </div>
     );
   }
@@ -369,7 +401,24 @@ export default function Settings() {
           />
         </div>
 
-        <div className="p-3 bg-purple-50 rounded-lg text-xs text-purple-700">
+        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg mt-4">
+          <div>
+            <span className="text-sm font-medium text-gray-700">隐藏 AI 水印</span>
+            <p className="text-xs text-gray-500">关闭生成图片上的「AI生成」标识（部分供应商可能不支持）</p>
+          </div>
+          <button
+            onClick={() => setSettings({ ...settings, hideAiWatermark: !settings.hideAiWatermark })}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              settings.hideAiWatermark !== false ? 'bg-violet-500' : 'bg-gray-300'
+            }`}
+          >
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              settings.hideAiWatermark !== false ? 'translate-x-6' : 'translate-x-1'
+            }`} />
+          </button>
+        </div>
+
+        <div className="p-3 bg-purple-50 rounded-lg text-xs text-purple-700 mt-3">
           <strong>价格参考：</strong>
           即梦 Seedream 5.0 Lite 约 0.22 元/张 (50张免费) · 
           通义万相 wanx-v1 约 0.10 元/张 (50张免费) · 
@@ -543,6 +592,7 @@ export default function Settings() {
         >
           {saving ? '保存中...' : '保存设置'}
         </button>
+        <span className="text-xs text-gray-400 ml-3">修改后自动保存</span>
       </div>
 
       {/* Legal */}
