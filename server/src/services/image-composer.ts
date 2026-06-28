@@ -21,13 +21,14 @@ function getTheme(s: ComicStyle): Theme { return THEMES[s] || DEFAULT_THEME; }
 function esc(s: string): string { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 function wrap(t: string, mx: number): string[] { const r: string[] = []; let s = t; while (s.length > mx) { r.push(s.slice(0, mx)); s = s.slice(mx); } if (s) r.push(s); return r; }
 
+const BASE_SCALE = 1.4;
+
 type Builder = (img: ScriptImage, w: number, h: number, t: Theme, f: string, c: string, sc: number, lc: string, rc: string) => string;
 
-// --- Bar layout ---
 function barComparison(img: ScriptImage, w: number, h: number, t: Theme, f: string, c: string, sc: number, lc: string, rc: string): string {
-  const s = (v: number) => Math.round(v * sc);
+  const s = (v: number) => Math.round(v * sc * BASE_SCALE);
   const titleH = s(90), barH = s(100), mid = w / 2;
-  const copyLines = wrap(img.copyText || '', Math.round(22 / sc));
+  const copyLines = wrap(img.copyText || '', Math.round(22 / sc / BASE_SCALE));
   const lineH = s(34);
   const copyH = copyLines.length ? copyLines.length * lineH + s(20) : 0;
   const quoteH = img.quote ? s(50) : 0;
@@ -40,11 +41,11 @@ function barComparison(img: ScriptImage, w: number, h: number, t: Theme, f: stri
   <rect x="0" y="0" width="${w}" height="${titleH}" fill="${t.titleBg}"/>
   <text x="${mid}" y="${titleH * 0.6}" text-anchor="middle" font-family="${f}" font-size="${s(46)}" font-weight="700" fill="${c}" filter="url(#ts)">${esc(img.title)}</text>
   <rect x="0" y="${barY}" width="${w}" height="${barH}" fill="${t.captionBg}"/>
-  <circle cx="50" cy="${barY + barH / 2}" r="8" fill="${lc}"/>
-  <text x="70" y="${barY + barH / 2 + 8}" font-family="${f}" font-size="${s(30)}" font-weight="600" fill="${lc}" filter="url(#ts)">${esc(left)}</text>
+  <circle cx="50" cy="${barY + barH / 2}" r="${s(8)}" fill="${lc}"/>
+  <text x="70" y="${barY + barH / 2 + s(6)}" font-family="${f}" font-size="${s(30)}" font-weight="600" fill="${lc}" filter="url(#ts)">${esc(left)}</text>
   <line x1="${mid}" y1="${barY + 10}" x2="${mid}" y2="${barY + barH - 10}" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
-  <circle cx="${mid + 30}" cy="${barY + barH / 2}" r="8" fill="${rc}"/>
-  <text x="${mid + 50}" y="${barY + barH / 2 + 8}" font-family="${f}" font-size="${s(30)}" font-weight="600" fill="${rc}" filter="url(#ts)">${esc(right)}</text>
+  <circle cx="${mid + 30}" cy="${barY + barH / 2}" r="${s(8)}" fill="${rc}"/>
+  <text x="${mid + 50}" y="${barY + barH / 2 + s(6)}" font-family="${f}" font-size="${s(30)}" font-weight="600" fill="${rc}" filter="url(#ts)">${esc(right)}</text>
   ${copyLines.length ? `<rect x="0" y="${barY + barH}" width="${w}" height="${copyH}" fill="rgba(0,0,0,0.42)"/>
   ${copyLines.map((l, i) => `<text x="${mid}" y="${barY + barH + s(22) + i * lineH}" text-anchor="middle" font-family="${f}" font-size="${s(28)}" fill="${c}" opacity="0.9">${esc(l)}</text>`).join('')}` : ''}
   ${img.quote ? `<rect x="0" y="${h - quoteH}" width="${w}" height="${quoteH}" fill="rgba(0,0,0,0.35)"/>
@@ -53,10 +54,10 @@ function barComparison(img: ScriptImage, w: number, h: number, t: Theme, f: stri
 }
 
 function barNormal(img: ScriptImage, w: number, h: number, t: Theme, f: string, c: string, sc: number, _lc: string, _rc: string): string {
-  const s = (v: number) => Math.round(v * sc);
+  const s = (v: number) => Math.round(v * sc * BASE_SCALE);
   const titleH = s(90), mid = w / 2;
-  const captionLines = wrap(img.caption || '', Math.round(18 / sc));
-  const copyLines = wrap(img.copyText || '', Math.round(22 / sc));
+  const captionLines = wrap(img.caption || '', Math.round(18 / sc / BASE_SCALE));
+  const copyLines = wrap(img.copyText || '', Math.round(22 / sc / BASE_SCALE));
   const tips = img.tips || [];
   const lineH = s(34);
   const captionH = captionLines.length * lineH + s(30);
@@ -80,9 +81,8 @@ function barNormal(img: ScriptImage, w: number, h: number, t: Theme, f: string, 
 </svg>`;
 }
 
-// --- Floating layout (no background, heavy text shadow) ---
 function floatingComparison(img: ScriptImage, w: number, h: number, _t: Theme, f: string, c: string, sc: number, lc: string, rc: string): string {
-  const s = (v: number) => Math.round(v * sc);
+  const s = (v: number) => Math.round(v * sc * BASE_SCALE);
   const mid = w / 2;
   const left = img.left?.title || '别问为什么不';
   const right = img.right?.title || '要问为什么要';
@@ -102,7 +102,7 @@ function floatingComparison(img: ScriptImage, w: number, h: number, _t: Theme, f
 }
 
 function floatingNormal(img: ScriptImage, w: number, h: number, _t: Theme, f: string, c: string, sc: number, _lc: string, _rc: string): string {
-  const s = (v: number) => Math.round(v * sc);
+  const s = (v: number) => Math.round(v * sc * BASE_SCALE);
   const mid = w / 2;
   const tips = img.tips || [];
 
@@ -119,9 +119,8 @@ function floatingNormal(img: ScriptImage, w: number, h: number, _t: Theme, f: st
 </svg>`;
 }
 
-// --- Card layout (rounded cards) ---
 function cardComparison(img: ScriptImage, w: number, h: number, _t: Theme, f: string, c: string, sc: number, lc: string, rc: string): string {
-  const s = (v: number) => Math.round(v * sc);
+  const s = (v: number) => Math.round(v * sc * BASE_SCALE);
   const mid = w / 2;
   const left = img.left?.title || '别问为什么不';
   const right = img.right?.title || '要问为什么要';
@@ -142,7 +141,7 @@ function cardComparison(img: ScriptImage, w: number, h: number, _t: Theme, f: st
 }
 
 function cardNormal(img: ScriptImage, w: number, h: number, _t: Theme, f: string, c: string, sc: number, _lc: string, _rc: string): string {
-  const s = (v: number) => Math.round(v * sc);
+  const s = (v: number) => Math.round(v * sc * BASE_SCALE);
   const mid = w / 2;
   const tips = img.tips || [];
   const cardW = s(440), cardH = s(70);
@@ -159,9 +158,8 @@ function cardNormal(img: ScriptImage, w: number, h: number, _t: Theme, f: string
 </svg>`;
 }
 
-// --- Minimal layout ---
 function minimalComparison(img: ScriptImage, w: number, h: number, _t: Theme, f: string, c: string, sc: number, lc: string, rc: string): string {
-  const s = (v: number) => Math.round(v * sc);
+  const s = (v: number) => Math.round(v * sc * BASE_SCALE);
   const mid = w / 2;
   const left = img.left?.title || '别问为什么不';
   const right = img.right?.title || '要问为什么要';
@@ -177,7 +175,7 @@ function minimalComparison(img: ScriptImage, w: number, h: number, _t: Theme, f:
 }
 
 function minimalNormal(img: ScriptImage, w: number, h: number, _t: Theme, f: string, c: string, sc: number, _lc: string, _rc: string): string {
-  const s = (v: number) => Math.round(v * sc);
+  const s = (v: number) => Math.round(v * sc * BASE_SCALE);
   const mid = w / 2;
   const stripH = s(50);
 

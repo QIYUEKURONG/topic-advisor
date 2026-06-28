@@ -3,7 +3,7 @@ import { join, resolve } from 'node:path';
 import puppeteer from 'puppeteer';
 import { fetch } from 'undici';
 import { getSettings } from '../config/settings.js';
-import { renderCardHTML, CARD_LAYOUTS } from './card-templates.js';
+import { renderCardHTML, CARD_LAYOUTS, CARD_STYLES } from './card-templates.js';
 import type { CardData, CardItem, CardStyle, CardLayout } from './card-templates.js';
 
 function getCardsDir(): string {
@@ -38,22 +38,26 @@ async function aiGenerateCardContent(
 
   if (!apiKey) throw new Error('请先在设置中配置 AI API Key');
 
-  const systemPrompt = `你是一个知识卡片内容生成器。用户会给你一个主题，你需要生成结构化的知识卡片内容。
+  const systemPrompt = `你是一个小红书风格知识卡片内容生成器。用户会给你一个主题，你需要生成结构化的知识卡片内容。
 
-要求：
-1. mainTitle: 大标题，4-8个字，简洁有力
-2. subtitle: 副标题，10-20字的解释说明
+参考风格：类似小红书上"36个富人思维"、"时间底盘"这类知识图卡。
+
+严格要求：
+1. mainTitle: 大标题，3-6个字，像口号一样有力（例如："富人思维"、"时间底盘"、"成长清单"）
+2. subtitle: 副标题，8-15字（例如："不是天生，而是刻意练习的结果"）
 3. items: 恰好 ${itemCount} 个条目，每个条目包含:
-   - title: 条目标题，2-6个字
-   - desc: 一句话描述，10-25字
-   - icon: 一个相关的 emoji
+   - title: 关键词标签，2-4个字（例如："时间"、"精力"、"学习"、"目标"）
+   - keyword: 核心方法/工具，3-6个字（例如："日程本"、"高价值时段"、"一本书笔记"）
+   - desc: 一句话行动指南，8-18字（例如："把时间先排出来"、"聚焦精力，做最重要的事"）
+   - icon: 一个贴切的 emoji（例如：📅、⏰、📖、🎯）
 
-语气要求：
-- 干货为主，避免废话
-- 像笔记一样精炼
-- 实操性强
+内容要求：
+- 每一条必须是可操作的具体方法，不要空洞的大道理
+- title 和 keyword 不要重复
+- 条目之间有逻辑递进或分类关系
+- 像学霸的笔记一样精炼实用
 
-返回纯 JSON，不要 markdown 代码块。`;
+返回纯 JSON，不要 markdown 代码块，不要任何额外文字。`;
 
   const resp = await fetch(`${baseUrl}/v1/chat/completions`, {
     method: 'POST',
@@ -85,12 +89,13 @@ async function aiGenerateCardContent(
 
   const items: CardItem[] = (parsed.items || []).slice(0, itemCount).map((item: any) => ({
     title: String(item.title || ''),
+    keyword: String(item.keyword || item.subtitle || item.key || ''),
     desc: String(item.desc || item.description || ''),
     icon: String(item.icon || item.emoji || '📌'),
   }));
 
   while (items.length < itemCount) {
-    items.push({ title: `条目${items.length + 1}`, desc: '待补充', icon: '📌' });
+    items.push({ title: `条目${items.length + 1}`, keyword: '待补充', desc: '待补充', icon: '📌' });
   }
 
   return {
@@ -139,6 +144,7 @@ export async function generateCard(
   style: CardStyle,
   layout: CardLayout,
   onProgress?: CardProgressCallback,
+  customTheme?: import('./card-templates.js').CardCustomTheme,
 ): Promise<GeneratedCard> {
   const cardId = generateId();
   const cardDir = join(getCardsDir(), cardId);
@@ -157,6 +163,7 @@ export async function generateCard(
     items: content.items,
     style,
     footer: '选题参谋 · 知识卡片',
+    customTheme,
   };
 
   writeFileSync(join(cardDir, 'data.json'), JSON.stringify(cardData, null, 2));

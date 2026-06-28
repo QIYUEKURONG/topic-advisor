@@ -25,13 +25,19 @@ export const cardRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.get('/api/cards/generate', async (req, reply) => {
-    const { topic, style, layout } = req.query as {
+    const { topic, style, layout, customTheme } = req.query as {
       topic: string;
       style?: CardStyle;
       layout?: CardLayout;
+      customTheme?: string;
     };
 
     if (!topic) return reply.code(400).send({ error: '请提供主题' });
+
+    let parsedTheme;
+    if (customTheme) {
+      try { parsedTheme = JSON.parse(customTheme); } catch { /* ignore */ }
+    }
 
     reply.raw.writeHead(200, {
       'Content-Type': 'text/event-stream',
@@ -49,6 +55,7 @@ export const cardRoutes: FastifyPluginAsync = async (app) => {
         style || 'retro',
         layout || 'grid-6',
         (phase, message) => send('progress', { phase, message }),
+        parsedTheme,
       );
       send('complete', { cardId: card.id });
     } catch (err: any) {
