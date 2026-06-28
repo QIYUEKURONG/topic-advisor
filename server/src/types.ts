@@ -137,7 +137,7 @@ export const IMAGE_PROVIDER_DEFAULTS: Record<ImageProvider, { baseUrl: string; m
 export type ComicStyle =
   | 'warm' | 'cute' | 'business' | 'retro' | 'simple'
   | 'watercolor' | 'pixel' | 'ukiyoe' | 'poster' | 'sketch' | 'anime'
-  | 'aitech' | 'scifi';
+  | 'aitech' | 'scifi' | 'narrative';
 
 export const COMIC_STYLES: Record<ComicStyle, { label: string; description: string; promptHint: string }> = {
   warm: { label: '温馨日常', description: '暖色调家庭风格', promptHint: 'warm family illustration, soft colors, cozy home scene, hand-drawn style' },
@@ -153,6 +153,7 @@ export const COMIC_STYLES: Record<ComicStyle, { label: string; description: stri
   anime: { label: '日系动漫', description: '日本动漫画风', promptHint: 'Japanese anime illustration style, detailed anime characters, vivid colors, anime art' },
   aitech: { label: 'AI工具风', description: 'AI科技产品插画', promptHint: 'modern AI technology illustration, clean UI mockup style, gradient colors, robot and human interaction, digital workspace, tech product showcase, flat design with subtle 3D elements' },
   scifi: { label: '未来科技', description: '赛博朋克科幻风', promptHint: 'futuristic sci-fi illustration, cyberpunk neon glow, holographic interface, dark background with bright accent colors, high-tech digital environment, circuit board patterns' },
+  narrative: { label: '叙事插画', description: '社会观察故事风', promptHint: 'editorial narrative illustration, storytelling scene, cinematic composition, social commentary art, muted realistic tones with dramatic lighting, diverse characters in real-world settings, journalistic illustration style, New Yorker magazine cover art' },
 };
 
 export type TextLayout = 'bar' | 'floating' | 'card' | 'minimal';
