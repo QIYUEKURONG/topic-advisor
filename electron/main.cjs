@@ -1,5 +1,5 @@
 const { app, BrowserWindow, shell, dialog } = require('electron');
-const { fork } = require('child_process');
+const { fork, execSync } = require('child_process');
 const path = require('path');
 const http = require('http');
 const fs = require('fs');
@@ -7,6 +7,25 @@ const fs = require('fs');
 const PORT = 3721;
 let serverProcess = null;
 let mainWindow = null;
+
+function killPortProcess() {
+  try {
+    const result = execSync(`lsof -ti:${PORT}`, { encoding: 'utf8' }).trim();
+    if (result) {
+      const pids = result.split('\n').filter(Boolean);
+      for (const pid of pids) {
+        try {
+          process.kill(Number(pid), 'SIGKILL');
+          log(`Killed existing process on port ${PORT}: PID ${pid}`);
+        } catch {}
+      }
+      const { execSync: exec2 } = require('child_process');
+      try { exec2('sleep 1'); } catch {}
+    }
+  } catch {
+    log(`Port ${PORT} is free`);
+  }
+}
 
 function log(msg) {
   const ts = new Date().toISOString();
@@ -182,7 +201,10 @@ function createWindow() {
 }
 
 app.on('ready', async () => {
-  log('App ready, creating window with loading screen...');
+  log('App ready, checking port...');
+  killPortProcess();
+
+  log('Creating window with loading screen...');
   createWindow();
 
   log('Starting server...');
@@ -219,7 +241,8 @@ app.on('activate', () => {
 app.on('before-quit', () => {
   if (serverProcess) {
     log('Killing server process...');
-    serverProcess.kill();
+    try { serverProcess.kill('SIGKILL'); } catch {}
     serverProcess = null;
   }
+  killPortProcess();
 });
