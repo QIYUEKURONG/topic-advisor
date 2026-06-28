@@ -203,7 +203,7 @@ async function generateImageSeedream(
   hideWatermark = true,
 ): Promise<string> {
   const body: Record<string, any> = {
-    model: config.model || 'doubao-seedream-5-0-lite-260128',
+    model: config.model || 'doubao-seedream-4-5-251128',
     prompt,
     size: '1920x1920',
     response_format: 'url',
@@ -430,7 +430,10 @@ export async function generateComic(
     }
   }
 
-  if (finalImages.length === 0) throw new Error('所有图片生成都失败了');
+  if (finalImages.length === 0) {
+    try { const { rmSync } = await import('node:fs'); rmSync(comicDir, { recursive: true, force: true }); } catch {}
+    throw new Error('所有图片生成都失败了');
+  }
 
   onProgress?.('done', '完成！', totalSteps, totalSteps);
 
@@ -503,6 +506,44 @@ export async function recomposeComic(
   }
 
   comic.finalImages = newFinals;
+  comic.version = (comic.version || 0) + 1;
+  writeFileSync(join(comicDir, 'comic.json'), JSON.stringify(comic, null, 2));
+  return comic;
+}
+
+export async function updateComicScript(
+  comicId: string,
+  imageIndex: number,
+  updates: Partial<ScriptImage>,
+  fontStyle: FontStyle,
+  textLayout: TextLayout = 'bar',
+  fontColor: FontColor = 'white',
+  fontScale: number = 1.0,
+  leftColor: FontColor = 'red',
+  rightColor: FontColor = 'lime',
+): Promise<GeneratedComic | null> {
+  const comic = getComic(comicId);
+  if (!comic || imageIndex < 0 || imageIndex >= comic.script.images.length) return null;
+
+  const img = comic.script.images[imageIndex];
+  if (updates.title !== undefined) img.title = updates.title;
+  if (updates.copyText !== undefined) img.copyText = updates.copyText;
+  if (updates.caption !== undefined) img.caption = updates.caption;
+  if (updates.quote !== undefined) img.quote = updates.quote;
+  if (updates.left) img.left = { ...img.left!, ...updates.left };
+  if (updates.right) img.right = { ...img.right!, ...updates.right };
+  if (updates.tips) img.tips = updates.tips;
+
+  const comicDir = join(getStickersDir(), comicId);
+  writeFileSync(join(comicDir, 'script.json'), JSON.stringify(comic.script, null, 2));
+
+  const rawPath = join(comicDir, comic.rawImages[imageIndex]);
+  if (existsSync(rawPath)) {
+    const finalFile = `final-${imageIndex + 1}.png`;
+    const finalPath = join(comicDir, finalFile);
+    await compositeTextOnImage(rawPath, finalPath, img, comic.style, fontStyle, textLayout, fontColor, fontScale, leftColor, rightColor);
+  }
+
   comic.version = (comic.version || 0) + 1;
   writeFileSync(join(comicDir, 'comic.json'), JSON.stringify(comic, null, 2));
   return comic;

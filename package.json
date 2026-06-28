@@ -12,9 +12,10 @@
     "start": "pnpm --filter server start",
     "bundle:server": "node scripts/bundle-server.mjs",
     "electron:dev": "pnpm build && pnpm bundle:server && electron .",
-    "dist:mac": "pnpm build && pnpm bundle:server && electron-builder --mac",
-    "dist:win": "pnpm build && pnpm bundle:server && electron-builder --win",
-    "dist:all": "pnpm build && pnpm bundle:server && electron-builder --mac --win"
+    "predist": "rm -rf release",
+    "dist:mac": "pnpm predist && pnpm build && pnpm bundle:server && electron-builder --mac",
+    "dist:win": "pnpm predist && pnpm build && pnpm bundle:server && electron-builder --win",
+    "dist:all": "pnpm predist && pnpm build && pnpm bundle:server && electron-builder --mac --win"
   },
   "build": {
     "appId": "com.topic-advisor.app",

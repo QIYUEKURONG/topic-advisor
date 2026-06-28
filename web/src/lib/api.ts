@@ -28,7 +28,7 @@ export interface ImageProviderConfig {
 }
 
 export const IMAGE_PROVIDER_OPTIONS: Array<{ id: ImageProvider; label: string; baseUrl: string; model: string }> = [
-  { id: 'seedream', label: '即梦 Seedream (火山引擎)', baseUrl: 'https://ark.cn-beijing.volces.com', model: 'doubao-seedream-5-0-lite-260128' },
+  { id: 'seedream', label: '即梦 Seedream (火山引擎)', baseUrl: 'https://ark.cn-beijing.volces.com', model: 'doubao-seedream-4-5-251128' },
   { id: 'dashscope', label: '通义万相 (阿里云)', baseUrl: 'https://dashscope.aliyuncs.com', model: 'wanx-v1' },
   { id: 'cogview', label: '智谱 CogView-4', baseUrl: 'https://open.bigmodel.cn', model: 'cogView-4-250304' },
   { id: 'custom', label: '自定义', baseUrl: '', model: '' },
@@ -316,6 +316,12 @@ export const api = {
     request<GeneratedComic>(`/stickers/${comicId}/recompose`, {
       method: 'POST',
       body: JSON.stringify({ fontStyle, textLayout, fontColor, fontScale, leftColor, rightColor }),
+    }),
+
+  updateComicScript: (comicId: string, imageIndex: number, updates: Partial<ScriptImage>, fontStyle: FontStyle, textLayout: TextLayout, fontColor: FontColor, fontScale: number = 1.0, leftColor: FontColor = 'red', rightColor: FontColor = 'lime') =>
+    request<GeneratedComic>(`/stickers/${comicId}/update-script`, {
+      method: 'POST',
+      body: JSON.stringify({ imageIndex, updates, fontStyle, textLayout, fontColor, fontScale, leftColor, rightColor }),
     }),
 
   getExportUrl: (comicId: string, layout: 'grid' | 'vertical' | 'horizontal' = 'grid') =>

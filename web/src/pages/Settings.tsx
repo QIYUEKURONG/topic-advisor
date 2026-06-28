@@ -399,6 +399,15 @@ export default function Settings() {
             placeholder="model-name"
             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent text-sm font-mono"
           />
+          <p className="text-xs text-gray-500 mt-1">
+            {settings.imageProvider?.provider === 'seedream'
+              ? '常用模型: doubao-seedream-4-5-251128 (推荐) / doubao-seedream-5-0-lite-260128'
+              : settings.imageProvider?.provider === 'dashscope'
+                ? '常用模型: wanx-v1 / wanx2.1-t2i-turbo'
+                : settings.imageProvider?.provider === 'cogview'
+                  ? '常用模型: cogView-4-250304'
+                  : ''}
+          </p>
         </div>
 
         <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg mt-4">

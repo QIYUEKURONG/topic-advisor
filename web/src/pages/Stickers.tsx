@@ -9,6 +9,7 @@ import {
   type ImageMode,
   type ImageConfig,
   type GeneratedComic,
+  type ScriptImage,
   COMIC_STYLE_OPTIONS,
   FONT_STYLE_OPTIONS,
   FONT_COLOR_OPTIONS,
@@ -55,6 +56,8 @@ export default function Stickers() {
   const [error, setError] = useState<string | null>(null);
   const [showRaw, setShowRaw] = useState(false);
   const [recomposing, setRecomposing] = useState(false);
+  const [editingIdx, setEditingIdx] = useState<number | null>(null);
+  const [editDraft, setEditDraft] = useState<Partial<ScriptImage>>({});
 
   const loadComics = useCallback(async () => {
     try { setComics(await api.listComics()); } catch {}
@@ -452,6 +455,16 @@ export default function Stickers() {
                           {selectedComic.script.images[i]?.mode === 'comparison' ? '对比' : '普通'}
                         </span>
                       </div>
+                      <button
+                        onClick={() => {
+                          const s = selectedComic.script.images[i];
+                          setEditDraft({ title: s.title, copyText: s.copyText || '', caption: s.caption || '', quote: s.quote || '', left: s.left ? { ...s.left } : undefined, right: s.right ? { ...s.right } : undefined });
+                          setEditingIdx(i);
+                        }}
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-blue-500/80 text-white text-xs px-2 py-1 rounded hover:bg-blue-600/90"
+                      >
+                        编辑文案
+                      </button>
                       <a
                         href={api.getComicImageUrl(selectedComic.id, img, selectedComic.version)}
                         download={img}
@@ -462,6 +475,101 @@ export default function Stickers() {
                     </div>
                   ))}
                 </div>
+
+                {/* Edit script modal */}
+                {editingIdx !== null && selectedComic.script.images[editingIdx] && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setEditingIdx(null)}>
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 max-h-[80vh] overflow-y-auto p-5" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold text-gray-900">编辑第 {editingIdx + 1} 张文案</h3>
+                        <button onClick={() => setEditingIdx(null)} className="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+                      </div>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">标题</label>
+                          <input
+                            value={editDraft.title || ''}
+                            onChange={(e) => setEditDraft({ ...editDraft, title: e.target.value })}
+                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">正文 (copyText)</label>
+                          <textarea
+                            value={editDraft.copyText || ''}
+                            onChange={(e) => setEditDraft({ ...editDraft, copyText: e.target.value })}
+                            rows={2}
+                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                          />
+                        </div>
+                        {selectedComic.script.images[editingIdx].mode === 'comparison' ? (
+                          <>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="text-xs font-medium text-red-600">✗ 左侧标题</label>
+                                <input
+                                  value={editDraft.left?.title || ''}
+                                  onChange={(e) => setEditDraft({ ...editDraft, left: { ...editDraft.left!, title: e.target.value } })}
+                                  className="w-full mt-1 px-3 py-2 border border-red-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs font-medium text-green-600">✓ 右侧标题</label>
+                                <input
+                                  value={editDraft.right?.title || ''}
+                                  onChange={(e) => setEditDraft({ ...editDraft, right: { ...editDraft.right!, title: e.target.value } })}
+                                  className="w-full mt-1 px-3 py-2 border border-green-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-300"
+                                />
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          <div>
+                            <label className="text-xs font-medium text-gray-600">副标题 (caption)</label>
+                            <input
+                              value={editDraft.caption || ''}
+                              onChange={(e) => setEditDraft({ ...editDraft, caption: e.target.value })}
+                              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            />
+                          </div>
+                        )}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">引用 (quote)</label>
+                          <input
+                            value={editDraft.quote || ''}
+                            onChange={(e) => setEditDraft({ ...editDraft, quote: e.target.value })}
+                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-3 mt-5">
+                        <button
+                          onClick={() => setEditingIdx(null)}
+                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          取消
+                        </button>
+                        <button
+                          disabled={recomposing}
+                          onClick={async () => {
+                            if (!selectedComic || editingIdx === null || recomposing) return;
+                            setRecomposing(true);
+                            try {
+                              const updated = await api.updateComicScript(selectedComic.id, editingIdx, editDraft, fontStyle, textLayout, fontColor, fontScale, leftColor, rightColor);
+                              setSelectedComic(updated);
+                              loadComics();
+                              setEditingIdx(null);
+                            } catch (err: any) { setError(err.message); }
+                            finally { setRecomposing(false); }
+                          }}
+                          className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 disabled:opacity-50"
+                        >
+                          {recomposing ? '合成中...' : '保存并重新合成'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Style switcher */}
                 <div className="mt-4 p-4 bg-gray-50 rounded-lg">

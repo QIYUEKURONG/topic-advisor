@@ -118,7 +118,7 @@ export interface ImageProviderConfig {
 export const IMAGE_PROVIDER_DEFAULTS: Record<ImageProvider, { baseUrl: string; model: string; label: string }> = {
   seedream: {
     baseUrl: 'https://ark.cn-beijing.volces.com',
-    model: 'doubao-seedream-5-0-lite-260128',
+    model: 'doubao-seedream-4-5-251128',
     label: '即梦 Seedream (火山引擎)',
   },
   dashscope: {

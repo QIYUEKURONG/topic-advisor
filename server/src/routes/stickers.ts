@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { createReadStream } from 'node:fs';
-import { COMIC_STYLES, FONT_STYLES, FONT_COLORS, TEXT_LAYOUTS, type ComicStyle, type FontStyle, type FontColor, type TextLayout, type ImageConfig, type StickerRequest } from '../types.js';
+import { COMIC_STYLES, FONT_STYLES, FONT_COLORS, TEXT_LAYOUTS, type ComicStyle, type FontStyle, type FontColor, type TextLayout, type ImageConfig, type StickerRequest, type ScriptImage } from '../types.js';
 import {
   generateComic,
   listComics,
@@ -8,6 +8,7 @@ import {
   getComicImagePath,
   exportComicLayout,
   recomposeComic,
+  updateComicScript,
 } from '../services/sticker-generator.js';
 
 export async function stickerRoutes(app: FastifyInstance) {
@@ -45,6 +46,19 @@ export async function stickerRoutes(app: FastifyInstance) {
       const { fontStyle = 'default', fontColor = 'white', fontScale = 1.0, leftColor = 'red', rightColor = 'lime', textLayout = 'bar', style } = (req.body || {}) as { fontStyle?: FontStyle; fontColor?: FontColor; fontScale?: number; leftColor?: FontColor; rightColor?: FontColor; textLayout?: TextLayout; style?: ComicStyle };
       const comic = await recomposeComic(req.params.id, fontStyle, textLayout, fontColor, fontScale, leftColor, rightColor, style);
       if (!comic) return reply.status(404).send({ error: '漫画未找到' });
+      return comic;
+    },
+  );
+
+  app.post<{ Params: { id: string }; Body: { imageIndex: number; updates: Partial<ScriptImage>; fontStyle?: FontStyle; fontColor?: FontColor; fontScale?: number; leftColor?: FontColor; rightColor?: FontColor; textLayout?: TextLayout } }>(
+    '/api/stickers/:id/update-script',
+    async (req, reply) => {
+      const { imageIndex, updates, fontStyle = 'default', fontColor = 'white', fontScale = 1.0, leftColor = 'red', rightColor = 'lime', textLayout = 'bar' } = req.body || {} as any;
+      if (typeof imageIndex !== 'number' || !updates) {
+        return reply.status(400).send({ error: '缺少 imageIndex 或 updates' });
+      }
+      const comic = await updateComicScript(req.params.id, imageIndex, updates, fontStyle, textLayout, fontColor, fontScale, leftColor, rightColor);
+      if (!comic) return reply.status(404).send({ error: '漫画未找到或索引无效' });
       return comic;
     },
   );

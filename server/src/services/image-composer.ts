@@ -19,7 +19,18 @@ const DEFAULT_THEME: Theme = { titleBg: 'rgba(33,33,33,0.65)', titleTextColor: '
 
 function getTheme(s: ComicStyle): Theme { return THEMES[s] || DEFAULT_THEME; }
 function esc(s: string): string { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-function wrap(t: string, mx: number): string[] { const r: string[] = []; let s = t; while (s.length > mx) { r.push(s.slice(0, mx)); s = s.slice(mx); } if (s) r.push(s); return r; }
+function wrap(t: string, mx: number): string[] {
+  if (!t || t.length <= mx) return t ? [t] : [];
+  const r: string[] = []; let s = t;
+  while (s.length > mx) { r.push(s.slice(0, mx)); s = s.slice(mx); }
+  if (s) r.push(s);
+  return r;
+}
+function svgTextLines(lines: string[], x: number, startY: number, lineH: number, attrs: string, f: string): string {
+  return lines.map((l, i) =>
+    `<text x="${x}" y="${startY + i * lineH}" ${attrs} font-family="${f}">${esc(l)}</text>`
+  ).join('\n  ');
+}
 
 const BASE_SCALE = 1.4;
 
@@ -27,7 +38,12 @@ type Builder = (img: ScriptImage, w: number, h: number, t: Theme, f: string, c: 
 
 function barComparison(img: ScriptImage, w: number, h: number, t: Theme, f: string, c: string, sc: number, lc: string, rc: string): string {
   const s = (v: number) => Math.round(v * sc * BASE_SCALE);
-  const titleH = s(90), barH = s(100), mid = w / 2;
+  const mid = w / 2;
+  const titleMaxChars = Math.round(16 / sc / BASE_SCALE);
+  const titleLines = wrap(img.title || '', titleMaxChars);
+  const titleLineH = s(52);
+  const titleH = Math.max(s(90), titleLines.length * titleLineH + s(20));
+  const barH = s(100);
   const copyLines = wrap(img.copyText || '', Math.round(22 / sc / BASE_SCALE));
   const lineH = s(34);
   const copyH = copyLines.length ? copyLines.length * lineH + s(20) : 0;
@@ -39,7 +55,7 @@ function barComparison(img: ScriptImage, w: number, h: number, t: Theme, f: stri
   return `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
   <defs><filter id="ts"><feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.4"/></filter></defs>
   <rect x="0" y="0" width="${w}" height="${titleH}" fill="${t.titleBg}"/>
-  <text x="${mid}" y="${titleH * 0.6}" text-anchor="middle" font-family="${f}" font-size="${s(46)}" font-weight="700" fill="${c}" filter="url(#ts)">${esc(img.title)}</text>
+  ${svgTextLines(titleLines, mid, s(40), titleLineH, `text-anchor="middle" font-size="${s(46)}" font-weight="700" fill="${c}" filter="url(#ts)"`, f)}
   <rect x="0" y="${barY}" width="${w}" height="${barH}" fill="${t.captionBg}"/>
   <circle cx="50" cy="${barY + barH / 2}" r="${s(8)}" fill="${lc}"/>
   <text x="70" y="${barY + barH / 2 + s(6)}" font-family="${f}" font-size="${s(30)}" font-weight="600" fill="${lc}" filter="url(#ts)">${esc(left)}</text>
@@ -55,7 +71,11 @@ function barComparison(img: ScriptImage, w: number, h: number, t: Theme, f: stri
 
 function barNormal(img: ScriptImage, w: number, h: number, t: Theme, f: string, c: string, sc: number, _lc: string, _rc: string): string {
   const s = (v: number) => Math.round(v * sc * BASE_SCALE);
-  const titleH = s(90), mid = w / 2;
+  const mid = w / 2;
+  const titleMaxChars = Math.round(16 / sc / BASE_SCALE);
+  const titleLines = wrap(img.title || '', titleMaxChars);
+  const titleLineH = s(52);
+  const titleH = Math.max(s(90), titleLines.length * titleLineH + s(20));
   const captionLines = wrap(img.caption || '', Math.round(18 / sc / BASE_SCALE));
   const copyLines = wrap(img.copyText || '', Math.round(22 / sc / BASE_SCALE));
   const tips = img.tips || [];
@@ -70,7 +90,7 @@ function barNormal(img: ScriptImage, w: number, h: number, t: Theme, f: string, 
   return `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
   <defs><filter id="ts"><feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.4"/></filter></defs>
   <rect x="0" y="0" width="${w}" height="${titleH}" fill="${t.titleBg}"/>
-  <text x="${mid}" y="${titleH * 0.6}" text-anchor="middle" font-family="${f}" font-size="${s(46)}" font-weight="700" fill="${c}" filter="url(#ts)">${esc(img.title)}</text>
+  ${svgTextLines(titleLines, mid, s(40), titleLineH, `text-anchor="middle" font-size="${s(46)}" font-weight="700" fill="${c}" filter="url(#ts)"`, f)}
   <rect x="0" y="${bottomY}" width="${w}" height="${captionH + tipsH}" fill="${t.captionBg}"/>
   ${captionLines.map((l, i) => `<text x="${mid}" y="${bottomY + s(30) + i * lineH}" text-anchor="middle" font-family="${f}" font-size="${s(30)}" fill="${c}" filter="url(#ts)">${esc(l)}</text>`).join('')}
   ${tips.map((tip, i) => `<text x="50" y="${bottomY + captionH + i * s(32)}" font-family="${f}" font-size="${s(24)}" fill="${t.quoteColor}">💡 ${esc(tip)}</text>`).join('')}
@@ -86,17 +106,20 @@ function floatingComparison(img: ScriptImage, w: number, h: number, _t: Theme, f
   const mid = w / 2;
   const left = img.left?.title || '别问为什么不';
   const right = img.right?.title || '要问为什么要';
-  const copy = img.copyText || '';
+  const titleLines = wrap(img.title || '', Math.round(14 / sc / BASE_SCALE));
+  const titleLineH = s(64);
+  const copyLines = wrap(img.copyText || '', Math.round(20 / sc / BASE_SCALE));
+  const copyLineH = s(34);
 
   return `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <filter id="heavy"><feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#000" flood-opacity="0.9"/>
       <feDropShadow dx="2" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.6"/></filter>
   </defs>
-  <text x="${mid}" y="${s(70)}" text-anchor="middle" font-family="${f}" font-size="${s(56)}" font-weight="800" fill="${c}" filter="url(#heavy)">${esc(img.title)}</text>
+  ${svgTextLines(titleLines, mid, s(70), titleLineH, `text-anchor="middle" font-size="${s(56)}" font-weight="800" fill="${c}" filter="url(#heavy)"`, f)}
   <text x="${w * 0.25}" y="${h - s(100)}" text-anchor="middle" font-family="${f}" font-size="${s(36)}" font-weight="700" fill="${lc}" filter="url(#heavy)">✗ ${esc(left)}</text>
   <text x="${w * 0.75}" y="${h - s(100)}" text-anchor="middle" font-family="${f}" font-size="${s(36)}" font-weight="700" fill="${rc}" filter="url(#heavy)">✓ ${esc(right)}</text>
-  ${copy ? `<text x="${mid}" y="${h - s(40)}" text-anchor="middle" font-family="${f}" font-size="${s(28)}" fill="${c}" filter="url(#heavy)">${esc(copy)}</text>` : ''}
+  ${copyLines.length ? svgTextLines(copyLines, mid, h - s(40) - (copyLines.length - 1) * copyLineH, copyLineH, `text-anchor="middle" font-size="${s(28)}" fill="${c}" filter="url(#heavy)"`, f) : ''}
   ${img.quote ? `<text x="${mid}" y="${h - s(8)}" text-anchor="middle" font-family="${f}" font-size="${s(20)}" font-style="italic" fill="${c}" filter="url(#heavy)">${esc(img.quote)}</text>` : ''}
 </svg>`;
 }
@@ -105,16 +128,22 @@ function floatingNormal(img: ScriptImage, w: number, h: number, _t: Theme, f: st
   const s = (v: number) => Math.round(v * sc * BASE_SCALE);
   const mid = w / 2;
   const tips = img.tips || [];
+  const titleLines = wrap(img.title || '', Math.round(14 / sc / BASE_SCALE));
+  const titleLineH = s(64);
+  const captionLines = wrap(img.caption || '', Math.round(18 / sc / BASE_SCALE));
+  const captionLineH = s(38);
+  const copyLines = wrap(img.copyText || '', Math.round(20 / sc / BASE_SCALE));
+  const copyLineH = s(34);
 
   return `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <filter id="heavy"><feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#000" flood-opacity="0.9"/>
       <feDropShadow dx="2" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.6"/></filter>
   </defs>
-  <text x="${mid}" y="${s(70)}" text-anchor="middle" font-family="${f}" font-size="${s(56)}" font-weight="800" fill="${c}" filter="url(#heavy)">${esc(img.title)}</text>
-  ${img.caption ? `<text x="${mid}" y="${h - s(120)}" text-anchor="middle" font-family="${f}" font-size="${s(32)}" fill="${c}" filter="url(#heavy)">${esc(img.caption)}</text>` : ''}
+  ${svgTextLines(titleLines, mid, s(70), titleLineH, `text-anchor="middle" font-size="${s(56)}" font-weight="800" fill="${c}" filter="url(#heavy)"`, f)}
+  ${captionLines.length ? svgTextLines(captionLines, mid, h - s(120) - (captionLines.length - 1) * captionLineH, captionLineH, `text-anchor="middle" font-size="${s(32)}" fill="${c}" filter="url(#heavy)"`, f) : ''}
   ${tips.map((tip, i) => `<text x="${mid}" y="${h - s(80) + i * s(36)}" text-anchor="middle" font-family="${f}" font-size="${s(26)}" fill="${c}" filter="url(#heavy)">💡 ${esc(tip)}</text>`).join('')}
-  ${img.copyText ? `<text x="${mid}" y="${h - s(40)}" text-anchor="middle" font-family="${f}" font-size="${s(28)}" fill="${c}" filter="url(#heavy)">${esc(img.copyText)}</text>` : ''}
+  ${copyLines.length ? svgTextLines(copyLines, mid, h - s(40) - (copyLines.length - 1) * copyLineH, copyLineH, `text-anchor="middle" font-size="${s(28)}" fill="${c}" filter="url(#heavy)"`, f) : ''}
   ${img.quote ? `<text x="${mid}" y="${h - s(8)}" text-anchor="middle" font-family="${f}" font-size="${s(20)}" font-style="italic" fill="${c}" filter="url(#heavy)">${esc(img.quote)}</text>` : ''}
 </svg>`;
 }
@@ -124,12 +153,14 @@ function cardComparison(img: ScriptImage, w: number, h: number, _t: Theme, f: st
   const mid = w / 2;
   const left = img.left?.title || '别问为什么不';
   const right = img.right?.title || '要问为什么要';
-  const cardW = s(440), cardH = s(70);
+  const titleLines = wrap(img.title || '', Math.round(14 / sc / BASE_SCALE));
+  const titleLineH = s(44);
+  const cardW = s(440), cardH = Math.max(s(70), titleLines.length * titleLineH + s(20));
 
   return `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
   <defs><filter id="cs"><feDropShadow dx="2" dy="3" stdDeviation="4" flood-opacity="0.35"/></filter></defs>
   <rect x="${mid - cardW / 2}" y="30" width="${cardW}" height="${cardH}" rx="${s(35)}" fill="rgba(0,0,0,0.6)" filter="url(#cs)"/>
-  <text x="${mid}" y="${30 + cardH * 0.65}" text-anchor="middle" font-family="${f}" font-size="${s(38)}" font-weight="700" fill="${c}">${esc(img.title)}</text>
+  ${svgTextLines(titleLines, mid, 30 + s(30), titleLineH, `text-anchor="middle" font-size="${s(38)}" font-weight="700" fill="${c}"`, f)}
   <rect x="30" y="${h - s(170)}" width="${mid - 50}" height="${s(60)}" rx="16" fill="${lc}" fill-opacity="0.8" filter="url(#cs)"/>
   <text x="${(mid - 50) / 2 + 30}" y="${h - s(130)}" text-anchor="middle" font-family="${f}" font-size="${s(28)}" font-weight="600" fill="${c}">✗ ${esc(left)}</text>
   <rect x="${mid + 20}" y="${h - s(170)}" width="${mid - 50}" height="${s(60)}" rx="16" fill="${rc}" fill-opacity="0.8" filter="url(#cs)"/>
@@ -144,12 +175,14 @@ function cardNormal(img: ScriptImage, w: number, h: number, _t: Theme, f: string
   const s = (v: number) => Math.round(v * sc * BASE_SCALE);
   const mid = w / 2;
   const tips = img.tips || [];
-  const cardW = s(440), cardH = s(70);
+  const titleLines = wrap(img.title || '', Math.round(14 / sc / BASE_SCALE));
+  const titleLineH = s(44);
+  const cardW = s(440), cardH = Math.max(s(70), titleLines.length * titleLineH + s(20));
 
   return `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
   <defs><filter id="cs"><feDropShadow dx="2" dy="3" stdDeviation="4" flood-opacity="0.35"/></filter></defs>
   <rect x="${mid - cardW / 2}" y="30" width="${cardW}" height="${cardH}" rx="${s(35)}" fill="rgba(0,0,0,0.6)" filter="url(#cs)"/>
-  <text x="${mid}" y="${30 + cardH * 0.65}" text-anchor="middle" font-family="${f}" font-size="${s(38)}" font-weight="700" fill="${c}">${esc(img.title)}</text>
+  ${svgTextLines(titleLines, mid, 30 + s(30), titleLineH, `text-anchor="middle" font-size="${s(38)}" font-weight="700" fill="${c}"`, f)}
   ${img.caption ? `<rect x="60" y="${h - s(170)}" width="${w - 120}" height="${s(50)}" rx="${s(25)}" fill="rgba(0,0,0,0.55)" filter="url(#cs)"/>
   <text x="${mid}" y="${h - s(137)}" text-anchor="middle" font-family="${f}" font-size="${s(28)}" fill="${c}">${esc(img.caption)}</text>` : ''}
   ${tips.map((tip, i) => `<rect x="60" y="${h - s(110) + i * s(42)}" width="${w - 120}" height="${s(36)}" rx="${s(18)}" fill="rgba(255,213,79,0.8)" filter="url(#cs)"/>
@@ -177,12 +210,15 @@ function minimalComparison(img: ScriptImage, w: number, h: number, _t: Theme, f:
 function minimalNormal(img: ScriptImage, w: number, h: number, _t: Theme, f: string, c: string, sc: number, _lc: string, _rc: string): string {
   const s = (v: number) => Math.round(v * sc * BASE_SCALE);
   const mid = w / 2;
-  const stripH = s(50);
+  const fullText = `${img.title || ''}${img.copyText ? `  ·  ${img.copyText}` : ''}`;
+  const textLines = wrap(fullText, Math.round(24 / sc / BASE_SCALE));
+  const lineH = s(32);
+  const stripH = Math.max(s(50), textLines.length * lineH + s(16));
 
   return `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
   <defs><filter id="ts"><feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.4"/></filter></defs>
   <rect x="0" y="${h - stripH}" width="${w}" height="${stripH}" fill="rgba(0,0,0,0.4)"/>
-  <text x="${mid}" y="${h - stripH / 2 + 7}" text-anchor="middle" font-family="${f}" font-size="${s(26)}" fill="${c}" filter="url(#ts)">${esc(img.title)}${img.copyText ? `  ·  ${esc(img.copyText)}` : ''}</text>
+  ${svgTextLines(textLines, mid, h - stripH + s(24), lineH, `text-anchor="middle" font-size="${s(26)}" fill="${c}" filter="url(#ts)"`, f)}
 </svg>`;
 }
 
